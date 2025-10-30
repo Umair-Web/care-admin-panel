@@ -12,6 +12,15 @@ import EditUser from "./pages/users/EditUser";
 import ComingSoon from "./pages/ComingSoon";
 import NotFound from "./pages/NotFound";
 import { DashboardLayout } from "./components/layout/DashboardLayout";
+import HospitalList from "./pages/hospital/HospitalList";
+import AddHospital from "./pages/hospital/AddHospital";
+import EditHospital from "./pages/hospital/EditHospital";
+import Managers from "./pages/hospital/Managers";
+import AddManager from "./pages/hospital/AddManager";
+import EditManager from "./pages/hospital/EditManager";
+import AllVideos from "./pages/videos/AllVideos";
+import AddVideo from "./pages/videos/AddVideo";
+import EditVideo from "./pages/videos/EditVideo";
 
 const queryClient = new QueryClient();
 
@@ -81,7 +90,27 @@ const App = () => (
             element={
               <ProtectedRoute>
                 <DashboardLayout>
-                  <ComingSoon title="Hospitals" description="Manage hospital information" />
+                  <HospitalList />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/hospital/list/add"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <AddHospital />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/hospital/list/edit/:id"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <EditHospital />
                 </DashboardLayout>
               </ProtectedRoute>
             }
@@ -91,7 +120,27 @@ const App = () => (
             element={
               <ProtectedRoute>
                 <DashboardLayout>
-                  <ComingSoon title="Managers" description="Manage hospital managers" />
+                  <Managers />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/hospital/managers/add"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <AddManager />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/hospital/managers/edit/:id"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <EditManager />
                 </DashboardLayout>
               </ProtectedRoute>
             }
@@ -173,7 +222,27 @@ const App = () => (
             element={
               <ProtectedRoute>
                 <DashboardLayout>
-                  <ComingSoon title="Videos" description="Manage video content" />
+                  <AllVideos />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/videos/add"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <AddVideo />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/videos/edit/:id"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <EditVideo />
                 </DashboardLayout>
               </ProtectedRoute>
             }
