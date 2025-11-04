@@ -34,7 +34,7 @@ import {
 } from "@/components/ui/sidebar";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { toast } from "sonner";
-
+import logo from "../../assets/logo.png";
 const mainMenuItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
   { title: "Users", url: "/users/all", icon: Users },
@@ -70,10 +70,26 @@ export function AppSidebar() {
   return (
     <Sidebar className={isCollapsed ? "w-14" : "w-64"} collapsible="icon">
       <div className="p-4 border-b flex items-center gap-2">
-        <div className="bg-primary p-2 rounded-lg">
-          <Activity className="h-5 w-5 text-primary-foreground" />
+        <div className="bg-white p-2 rounded-lg">
+          <img
+            src={logo}
+            alt="Metanoia-VR Logo"
+            width={28}
+            height={28}
+          />
         </div>
-        {!isCollapsed && <span className="font-bold text-lg">HealthCare</span>}
+        {!isCollapsed ? (
+          <span className="font-bold text-lg">Metanoia-VR</span>
+        ) : (
+          <img
+            src={logo}
+            alt="Metanoia-VR Logo"
+            width={22}
+            height={22}
+            className="absolute"
+          />
+        )}
+
       </div>
 
       <SidebarContent>

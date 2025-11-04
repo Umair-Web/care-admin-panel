@@ -8,49 +8,49 @@ const stats = [
     value: "1,234",
     progress: 68,
     icon: Users,
-    color: "text-chart-1",
+    color: "#FF7E41",
   },
   {
     title: "Total Categories",
     value: "48",
     progress: 75,
     icon: Layers,
-    color: "text-chart-2",
+   color: "#FF7E41",
   },
   {
     title: "Total Videos",
     value: "892",
     progress: 82,
     icon: Video,
-    color: "text-chart-3",
+   color: "#FF7E41",
   },
   {
     title: "Total Hospitals",
     value: "156",
     progress: 64,
     icon: Building2,
-    color: "text-chart-4",
+    color: "#FF7E41",
   },
   {
     title: "Total Doctors",
     value: "2,847",
     progress: 91,
     icon: Stethoscope,
-    color: "text-chart-1",
+    color: "#FF7E41",
   },
   {
     title: "Total Managers",
     value: "328",
     progress: 58,
     icon: UserCog,
-    color: "text-chart-5",
+    color: "#FF7E41",
   },
   {
     title: "Total Patients",
     value: "18,542",
     progress: 95,
     icon: User,
-    color: "text-chart-2",
+    color: "#FF7E41",
   },
 ];
 
@@ -60,7 +60,7 @@ const Dashboard = () => {
       <div>
         <h1 className="text-3xl font-bold">Dashboard</h1>
         <p className="text-muted-foreground mt-2">
-          Welcome to your healthcare management system
+          Welcome to your Metanoia-VR  management system
         </p>
       </div>
 
@@ -73,12 +73,12 @@ const Dashboard = () => {
                 <CardTitle className="text-sm font-medium text-muted-foreground">
                   {stat.title}
                 </CardTitle>
-                <Icon className={`h-5 w-5 ${stat.color}`} />
+                <Icon className={`h-5 w-5`} style={{ color: stat.color }} />
               </CardHeader>
               <CardContent>
                 <div className="text-3xl font-bold mb-4">{stat.value}</div>
                 <Progress value={stat.progress} className="h-2" />
-                <p className="text-xs text-muted-foreground mt-2">
+                <p className="text-xs text-muted-foreground mt-2" >
                   {stat.progress}% of target
                 </p>
               </CardContent>

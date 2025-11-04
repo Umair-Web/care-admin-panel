@@ -129,7 +129,7 @@ const SignUp = () => {
 
           <h1 className="text-2xl font-bold text-center mb-2">Create Account</h1>
           <p className="text-muted-foreground text-center mb-8">
-            Join our healthcare platform
+            Join our Metanoia-VR platform
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-4">

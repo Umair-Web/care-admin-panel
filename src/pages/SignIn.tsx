@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Eye, EyeOff, Activity } from "lucide-react";
 import { toast } from "sonner";
-
+import logo from "../assets/logo.png";
 const SignIn = () => {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
@@ -62,14 +62,17 @@ const SignIn = () => {
       <div className="w-full max-w-md">
         <div className="bg-card rounded-lg shadow-lg p-8">
           <div className="flex items-center justify-center mb-8">
-            <div className="bg-primary p-3 rounded-lg">
-              <Activity className="h-8 w-8 text-primary-foreground" />
-            </div>
+            <img
+              src={logo}
+              alt="Metanoia-VR Logo"
+              width={100}
+              height={100}
+            />
           </div>
 
           <h1 className="text-2xl font-bold text-center mb-2">Welcome Back</h1>
           <p className="text-muted-foreground text-center mb-8">
-            Sign in to your healthcare dashboard
+            Sign in to your Metanoia-VR dashboard
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-6">
