@@ -1,7 +1,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams,useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -32,6 +32,9 @@ type HospitalFormData = z.infer<typeof hospitalSchema>;
 
 export default function EditHospital() {
   const { id } = useParams();
+  const location = useLocation();
+  const hospital = location.state as HospitalFormData;
+  console.log("Editing hospital:", hospital);
   const navigate = useNavigate();
   const {
     register,
@@ -39,7 +42,7 @@ export default function EditHospital() {
     formState: { errors },
   } = useForm<HospitalFormData>({
     resolver: zodResolver(hospitalSchema),
-    defaultValues: {
+    defaultValues:hospital ||  {
       name: "City General Hospital",
       address: "123 Main St",
       city: "New York",

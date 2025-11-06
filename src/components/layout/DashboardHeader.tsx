@@ -34,7 +34,7 @@ export function DashboardHeader() {
   };
 
   return (
-    <header className="h-16 border-b bg-card px-6 flex items-center justify-between">
+    <header className="h-[75px] border-b bg-card px-6  flex items-center justify-between">
       <div className="flex items-center gap-4">
         <div className="text-sm text-muted-foreground">
           {breadcrumbs.map((crumb, index) => (

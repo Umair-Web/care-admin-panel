@@ -28,7 +28,7 @@ import { toast } from "sonner";
 const mockHospitals = [
   {
     id: 1,
-    name: "City General Hospital",
+    name: "City General Hospital ss",
     address: "123 Main St",
     city: "New York",
     state: "NY",
@@ -143,7 +143,7 @@ export default function HospitalList() {
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => navigate(`/hospital/list/edit/${hospital.id}`)}
+                          onClick={() => navigate(`/hospital/list/edit/${hospital.id}`,{state: hospital})}
                         >
                           <Edit className="h-4 w-4" />
                         </Button>

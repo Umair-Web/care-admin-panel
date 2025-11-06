@@ -1,7 +1,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams,useLocation } from "react-router-dom";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,6 +22,11 @@ type ManagerFormData = z.infer<typeof managerSchema>;
 
 export default function EditManager() {
   const { id } = useParams();
+
+  const location = useLocation();
+  const manager = location.state as ManagerFormData;
+  console.log("Editing manager:", manager);
+
   const navigate = useNavigate();
   const [preview, setPreview] = useState<string>("");
   const {
@@ -30,7 +35,7 @@ export default function EditManager() {
     formState: { errors },
   } = useForm<ManagerFormData>({
     resolver: zodResolver(managerSchema),
-    defaultValues: {
+    defaultValues: manager || {
       firstName: "John",
       lastName: "Smith",
       email: "john.smith@hospital.com",
