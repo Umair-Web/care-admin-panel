@@ -37,7 +37,9 @@ import AddCategory from "./pages/category/AddCategory";
 import AllCategories from "./pages/category/AllCategories";
 import EditCategories from "./pages/category/EditCategories";
 import AddSpecialization from "./pages/hospital/AddSpecialization";
-import AddSubscription from "./pages/category/AddCategory";
+import AllSubscriptions from "./pages/subscriptions/AllSubscription";
+import EditSubscription from "./pages/subscriptions/EditSubscription";
+import AddSubscription from "./pages/subscriptions/AddSubscription";
 
 const queryClient = new QueryClient();
 
@@ -336,6 +338,39 @@ const App = () => (
               <ProtectedRoute>
                 <DashboardLayout>
                  <EditCategories />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* ======Subscriptions====== */}
+
+          <Route
+            path="/subscriptions/all"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <AllSubscriptions />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/subscriptions/edit/:id"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <EditSubscription />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+           <Route
+            path="/subscriptions/add"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <AddSubscription />
                 </DashboardLayout>
               </ProtectedRoute>
             }

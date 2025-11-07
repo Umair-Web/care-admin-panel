@@ -11,7 +11,6 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { Edit, Trash2, Eye } from "lucide-react";
 import {
   AlertDialog,
@@ -25,57 +24,53 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 
-const mockVideos = [
+const mockSubscriptions = [
   {
     id: 1,
-    title: "Cardiology Basics",
+    name: "Cardiology Basics",
     price: 29.99,
-    category: "Medical Education",
-    thumbnail: "",
-    video: "cardiology-basics.mp4",
-    type: "Mobile" as const,
+    details: "Intro course to cardiology fundamentals",
+    duration: "3 months",
   },
   {
     id: 2,
-    title: "VR Surgery Simulation",
+    name: "VR Surgery Simulation",
     price: 49.99,
-    category: "Training",
-    thumbnail: "",
-    video: "vr-surgery.mp4",
-    type: "VR" as const,
+    details: "Hands-on VR surgical procedures training",
+    duration: "6 months",
   },
 ];
 
-export default function AllVideos() {
+export default function AllSubscriptions() {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [deleteId, setDeleteId] = useState<number | null>(null);
 
-  const filteredVideos = mockVideos.filter((video) =>
-    video.title.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredSubscriptions = mockSubscriptions.filter((s) =>
+    s.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleDelete = () => {
-    toast.success("Video deleted successfully!");
+    toast.success("Subscription deleted successfully!");
     setDeleteId(null);
   };
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Videos</h1>
+        <h1 className="text-3xl font-bold">Subscriptions</h1>
       </div>
 
       <Tabs defaultValue="all" className="w-full">
         <TabsList>
-          <TabsTrigger value="all">All Videos</TabsTrigger>
-          <TabsTrigger value="add">Add Video</TabsTrigger>
+          <TabsTrigger value="all">All Subscriptions</TabsTrigger>
+          <TabsTrigger value="add">Add Subscription</TabsTrigger>
         </TabsList>
 
         <TabsContent value="all" className="space-y-4">
           <div className="flex items-center justify-between">
             <Input
-              placeholder="Search videos..."
+              placeholder="Search Subscriptions..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="max-w-sm"
@@ -87,31 +82,21 @@ export default function AllVideos() {
               <TableHeader>
                 <TableRow>
                   <TableHead>ID</TableHead>
-                  <TableHead>Title</TableHead>
+                  <TableHead>Name</TableHead>
                   <TableHead>Price</TableHead>
-                  <TableHead>Category</TableHead>
-                  <TableHead>Thumbnail</TableHead>
-                  <TableHead>Video</TableHead>
-                  <TableHead>Type</TableHead>
+                  <TableHead>Details</TableHead>
+                  <TableHead>Duration</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredVideos.map((video) => (
-                  <TableRow key={video.id}>
-                    <TableCell>{video.id}</TableCell>
-                    <TableCell className="font-medium">{video.title}</TableCell>
-                    <TableCell>${video.price.toFixed(2)}</TableCell>
-                    <TableCell>{video.category}</TableCell>
-                    <TableCell>
-                      <div className="h-10 w-16 bg-muted rounded"></div>
-                    </TableCell>
-                    <TableCell>{video.video}</TableCell>
-                    <TableCell>
-                      <Badge variant={video.type === "VR" ? "default" : "secondary"}>
-                        {video.type}
-                      </Badge>
-                    </TableCell>
+                {filteredSubscriptions.map((subscription) => (
+                  <TableRow key={subscription.id}>
+                    <TableCell>{subscription.id}</TableCell>
+                    <TableCell className="font-medium">{subscription.name}</TableCell>
+                    <TableCell>${subscription.price.toFixed(2)}</TableCell>
+                    <TableCell className="max-w-xs truncate">{subscription.details}</TableCell>
+                    <TableCell>{subscription.duration}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <Button variant="ghost" size="icon">
@@ -120,14 +105,14 @@ export default function AllVideos() {
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => navigate(`/videos/edit/${video.id}`, { state: video })}
+                          onClick={() => navigate(`/Subscriptions/edit/${subscription.id}`, { state: subscription })}
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => setDeleteId(video.id)}
+                          onClick={() => setDeleteId(subscription.id)}
                         >
                           <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
@@ -143,11 +128,11 @@ export default function AllVideos() {
         <TabsContent value="add">
           <div className="rounded-md border bg-card p-6">
             <p className="text-muted-foreground">
-              Add Video form will be rendered here. Navigate to <code>/videos/add</code> for the
+              Add Subscription form will be rendered here. Navigate to <code>/Subscriptions/add</code> for the
               full form.
             </p>
-            <Button onClick={() => navigate("/videos/add")} className="mt-4">
-              Go to Add Video Form
+            <Button onClick={() => navigate("/Subscriptions/add")} className="mt-4">
+              Go to Add Subscription Form
             </Button>
           </div>
         </TabsContent>
@@ -158,7 +143,7 @@ export default function AllVideos() {
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the video.
+              This action cannot be undone. This will permanently delete the Subscription.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

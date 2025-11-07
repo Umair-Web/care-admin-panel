@@ -1,8 +1,8 @@
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { useNavigate, useParams } from "react-router-dom";
-import { useState } from "react";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -29,21 +29,64 @@ type VideoFormData = z.infer<typeof videoSchema>;
 export default function EditVideo() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const video = location.state as VideoFormData | undefined;
+
   const [thumbnailPreview, setThumbnailPreview] = useState<string>("");
   const {
     register,
     handleSubmit,
     setValue,
+    control,
+    reset,
+    watch,
     formState: { errors },
   } = useForm<VideoFormData>({
     resolver: zodResolver(videoSchema),
-    defaultValues: {
+    defaultValues: video || {
       title: "Cardiology Basics",
       price: "29.99",
       category: "medical",
       type: "Mobile",
     },
   });
+
+  // category options mapping (value -> label)
+  const categoryOptions = [
+    { value: "medical", label: "Medical Education" },
+    { value: "training", label: "Training" },
+    { value: "surgery", label: "Surgery" },
+  ];
+
+  // ensure controlled UI elements (Radix Select / RadioGroup) get initial values
+  // when navigating with location.state (video). React-hook-form's defaultValues
+  // won't automatically update those uncontrolled components, so call setValue in an effect.
+  useEffect(() => {
+    if (video) {
+      // map incoming category label (e.g. "Medical Education") to internal value ("medical")
+      const incomingCategory = (video as any).category as string | undefined;
+      let categoryValue = "medical";
+      if (incomingCategory) {
+        const found = categoryOptions.find(
+          (o) => o.value.toLowerCase() === incomingCategory.toString().toLowerCase() || o.label.toLowerCase() === incomingCategory.toString().toLowerCase()
+        );
+        categoryValue = found?.value ?? incomingCategory.toString().toLowerCase();
+      }
+
+      // reset form with mapped values so Controller/select pick them up
+      reset({
+        title: (video as any).title ?? "",
+        price: (video as any).price?.toString() ?? "",
+        category: categoryValue,
+        type: (video as any).type ?? "Mobile",
+      });
+
+      // set thumbnail preview if video provides a thumbnail URL
+      const thumb = (video as any).thumbnail as string | undefined;
+      if (thumb) setThumbnailPreview(thumb);
+    }
+  }, [video, setValue]);
 
   const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -93,19 +136,25 @@ export default function EditVideo() {
 
               <div className="space-y-2">
                 <Label htmlFor="category">Category *</Label>
-                <Select
-                  defaultValue="medical"
-                  onValueChange={(value) => setValue("category", value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="medical">Medical Education</SelectItem>
-                    <SelectItem value="training">Training</SelectItem>
-                    <SelectItem value="surgery">Surgery</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Controller
+                  control={control}
+                  name="category"
+                  render={({ field }) => (
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger>
+                        {/* show mapped label if available */}
+                        <SelectValue>
+                          {categoryOptions.find((c) => c.value === field.value)?.label ?? "Select category"}
+                        </SelectValue>
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="medical">Medical Education</SelectItem>
+                        <SelectItem value="training">Training</SelectItem>
+                        <SelectItem value="surgery">Surgery</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
                 {errors.category && (
                   <p className="text-sm text-destructive">{errors.category.message}</p>
                 )}
@@ -114,7 +163,7 @@ export default function EditVideo() {
               <div className="space-y-2">
                 <Label>Type *</Label>
                 <RadioGroup
-                  defaultValue="Mobile"
+                  value={watch("type")}
                   onValueChange={(value) => setValue("type", value as "Mobile" | "VR")}
                 >
                   <div className="flex items-center space-x-2">
