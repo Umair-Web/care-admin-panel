@@ -31,6 +31,7 @@ import EditDepartment from "./pages/hospital/EditDepartment";
 import AllVideos from "./pages/videos/AllVideos";
 import AddVideo from "./pages/videos/AddVideo";
 import EditVideo from "./pages/videos/EditVideo";
+import VideoDetails from "./pages/videos/VideoDetails";
 import EditPatient from "./pages/hospital/EditPatient";
 import AllDevices from "./pages/devices/AllDevices";
 import AddCategory from "./pages/category/AddCategory";
@@ -391,6 +392,16 @@ const App = () => (
               <ProtectedRoute>
                 <DashboardLayout>
                   <AddVideo />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/videos/details/:id"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <VideoDetails />
                 </DashboardLayout>
               </ProtectedRoute>
             }

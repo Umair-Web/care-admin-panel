@@ -2,17 +2,21 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-// select components removed (not used in this simplified form)
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
+import axios from "axios";
+import { authStorage } from "@/utils/authStorage";
+
+const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const token = authStorage.getToken();
 
 const SpecializationSchema = z.object({
-  // require at least one non-space character
-  specialization: z.string().refine((s) => s.trim().length > 0, {
-    message: "Specialization is required",
+  name: z.string().refine((s) => s.trim().length > 0, {
+    message: "Specialization name is required",
   }),
 });
 
@@ -20,20 +24,48 @@ type SpecializationFormData = z.infer<typeof SpecializationSchema>;
 
 export default function AddSpecialization() {
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
   const {
     register,
     handleSubmit,
-    control,
     formState: { errors },
   } = useForm<SpecializationFormData>({
     resolver: zodResolver(SpecializationSchema),
   });
 
-  const onSubmit = (data: SpecializationFormData) => {
-    console.log(data);
-    toast.success("Specialization created successfully!");
-    // navigate to the specializations list (consistent with other pages)
-    navigate("/hospital/specializations/all");
+  const onSubmit = async (data: SpecializationFormData) => {
+    try {
+      setLoading(true);
+      console.log("Creating specialization:", data);
+
+      const response = await axios.post(
+        `http://${BASE_URL}/specialization`,
+        { name: data.name },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      console.log("Specialization created:", response.data);
+
+      if (response.data.status === 'success') {
+        toast.success("Specialization created successfully!");
+        navigate("/hospital/Specializations/all");
+      } else {
+        toast.error("Failed to create specialization");
+      }
+    } catch (error: any) {
+      console.error("Error creating specialization:", error);
+      const errorMessage = 
+        error.response?.data?.message ||
+        "Failed to create specialization";
+      toast.error(errorMessage);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -50,20 +82,22 @@ export default function AddSpecialization() {
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="specialization">Specialization *</Label>
-                <Input id="specialization" {...register("specialization")} />
-                {errors.specialization && (
-                  <p className="text-sm text-destructive">{errors.specialization.message}</p>
+                <Label htmlFor="name">Specialization Name *</Label>
+                <Input id="name" {...register("name")} />
+                {errors.name && (
+                  <p className="text-sm text-destructive">{errors.name.message}</p>
                 )}
               </div>
             </div>
 
             <div className="flex gap-4">
-              <Button type="submit">Create Specialization</Button>
+              <Button type="submit" disabled={loading}>
+                {loading ? "Creating..." : "Create Specialization"}
+              </Button>
               <Button
                 type="button"   
                 variant="outline"
-                onClick={() => navigate("/hospital/specializations/all")}
+                onClick={() => navigate("/hospital/Specializations/all")}
               >
                 Cancel
               </Button>

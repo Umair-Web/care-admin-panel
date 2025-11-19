@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -24,6 +24,10 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 
+
+import { authStorage } from "@/utils/authStorage";
+import axios from "axios";
+
 const mockSubscriptions = [
   {
     id: 1,
@@ -42,6 +46,49 @@ const mockSubscriptions = [
 ];
 
 export default function AllSubscriptions() {
+  const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+  const [mockSubscriptions, setMockSubscriptions] = useState<Array<{
+    id: number;
+    name: string;
+    price: number;
+    details: string;
+    duration: string;
+  }>>([]);
+
+  const token = authStorage.getToken();
+
+  useEffect(() => {
+    fetchSubscriptions();
+  }, []);
+
+  const fetchSubscriptions = () => {
+    axios.get(`http://${BASE_URL}/subscriptions`, {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+
+    }).then((response) => {
+      console.log("All Subscription Success");
+      console.log("All Subscription Response:", response);
+
+
+
+      setMockSubscriptions(response.data.subscriptions);
+
+
+      // navigate("/Subscriptions/all");
+
+    }).catch((error) => {
+      console.error("All Subscription Error:", error);
+      console.error("All Subscription Error Response:", error.response);
+      console.error("All Subscription Error Data:", error.response?.data);
+    });
+
+  }
+
+
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [deleteId, setDeleteId] = useState<number | null>(null);
@@ -50,9 +97,24 @@ export default function AllSubscriptions() {
     s.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleDelete = () => {
-    toast.success("Subscription deleted successfully!");
-    setDeleteId(null);
+  const handleDelete = async () => {
+    try {
+      const response = await axios.delete(
+        `http://${BASE_URL}/subscription/${deleteId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      toast.success("Subscription deleted successfully!");
+      // Refresh the list
+      fetchSubscriptions();
+    } catch (error) {
+      console.error("Delete error:", error);
+      toast.error("Failed to delete subscription");
+    }
   };
 
   return (
@@ -99,9 +161,6 @@ export default function AllSubscriptions() {
                     <TableCell>{subscription.duration}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <Button variant="ghost" size="icon">
-                          <Eye className="h-4 w-4" />
-                        </Button>
                         <Button
                           variant="ghost"
                           size="icon"

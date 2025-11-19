@@ -1,7 +1,9 @@
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { useNavigate, useParams,useLocation } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
+import { useState, useEffect } from "react";
+import axios from "axios";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,52 +16,192 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
+import { authStorage } from "@/utils/authStorage";
+
+interface Manager {
+  id: number;
+  name?: string;
+  user?: {
+    id: number;
+    first_name: string;
+    last_name: string;
+    email: string;
+  };
+}
+
+interface Department {
+  id: number;
+  name: string;
+}
 
 const hospitalSchema = z.object({
   name: z.string().min(1, "Hospital name is required"),
   address: z.string().min(1, "Address is required"),
   city: z.string().min(1, "City is required"),
   state: z.string().min(1, "State is required"),
-  phone: z.string().min(1, "Phone number is required"),
+  phone_number: z.string().min(1, "Phone number is required"),
   email: z.string().email("Invalid email address"),
-  license: z.string().min(1, "License number is required"),
-  established: z.string().min(1, "Established date is required"),
-  manager: z.string().min(1, "Manager is required"),
-  postalCode: z.string().min(1, "Postal code is required"),
+  license_number: z.string().min(1, "License number is required"),
+  established_date: z.string().min(1, "Established date is required"),
+  manager_id: z.string().optional(),
+  department_id: z.string().optional(),
+  postal_code: z.string().min(1, "Postal code is required"),
 });
 
 type HospitalFormData = z.infer<typeof hospitalSchema>;
 
 export default function EditHospital() {
+  const BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const { id } = useParams();
-  const location = useLocation();
-  const hospital = location.state as HospitalFormData;
-  console.log("Editing hospital:", hospital);
   const navigate = useNavigate();
+  const location = useLocation();
+  const [loading, setLoading] = useState(false);
+  const [managers, setManagers] = useState<Manager[]>([]);
+  const [managersLoading, setManagersLoading] = useState(true);
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [departmentsLoading, setDepartmentsLoading] = useState(true);
+  
   const {
     register,
     handleSubmit,
     formState: { errors },
+    reset,
+    setValue,
+    control,
   } = useForm<HospitalFormData>({
     resolver: zodResolver(hospitalSchema),
-    defaultValues:hospital ||  {
-      name: "City General Hospital",
-      address: "123 Main St",
-      city: "New York",
-      state: "NY",
-      phone: "+1-555-0101",
-      email: "info@citygeneral.com",
-      license: "LIC-2024-001",
-      established: "2010-05-15",
-      manager: "1",
-      postalCode: "10001",
-    },
   });
 
-  const onSubmit = (data: HospitalFormData) => {
-    console.log(data);
-    toast.success("Hospital updated successfully!");
-    navigate("/hospital/list/all");
+  useEffect(() => {
+    fetchManagers();
+    fetchDepartments();
+  }, []);
+
+  useEffect(() => {
+    // Populate form with data from navigation state after managers/departments are loaded
+    const hospitalData = location.state;
+    console.log("Location state data:", hospitalData);
+
+    if (hospitalData && !managersLoading && !departmentsLoading) {
+      console.log("Hospital data from location state:", hospitalData);
+      
+      // Format date for HTML date input (YYYY-MM-DD)
+      const formatDateForInput = (dateString: string) => {
+        try {
+          const date = new Date(dateString);
+          return date.toISOString().split('T')[0];
+        } catch (error) {
+          console.error('Error formatting date:', error);
+          return dateString;
+        }
+      };
+      
+      const formData = {
+        name: hospitalData.name || '',
+        address: hospitalData.address || '',
+        city: hospitalData.city || '',
+        state: hospitalData.state || '',
+        phone_number: hospitalData.phone_number || '',
+        email: hospitalData.email || '',
+        license_number: hospitalData.license_number || '',
+        established_date: formatDateForInput(hospitalData.established_date || ''),
+        manager_id: (hospitalData.manager?.id || hospitalData.manager_id)?.toString() || '',
+        department_id: (hospitalData.department?.id || hospitalData.department_id)?.toString() || '',
+        postal_code: hospitalData.postal_code || '',
+      };
+      
+      console.log("Manager data:", hospitalData.manager);
+      console.log("Department data:", hospitalData.department);
+      console.log("Manager ID being set:", (hospitalData.manager?.id || hospitalData.manager_id)?.toString() || '');
+      console.log("Department ID being set:", (hospitalData.department?.id || hospitalData.department_id)?.toString() || '');
+      console.log("Form data being set:", formData);
+      reset(formData);
+    }
+  }, [location.state, reset, managersLoading, departmentsLoading]);
+
+  const fetchManagers = async () => {
+    try {
+      setManagersLoading(true);
+      const token = authStorage.getToken();
+      const response = await axios.get(`http://${BASE_URL}/managers`, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      console.log("Managers response:", response.data);
+      if (response.data.status === 'success' && response.data.data) {
+        setManagers(response.data.data);
+      }
+    } catch (error) {
+      console.error("Error fetching managers:", error);
+      toast.error("Failed to load managers");
+    } finally {
+      setManagersLoading(false);
+    }
+  };
+
+  const fetchDepartments = async () => {
+    try {
+      setDepartmentsLoading(true);
+      const token = authStorage.getToken();
+      console.log("Fetching departments...");
+      
+      const response = await axios.get(`http://${BASE_URL}/departments`, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      console.log("Departments response:", response.data);
+
+      if (response.data.status === 'success') {
+        setDepartments(response.data.data);
+      } else {
+        toast.error("Failed to load departments");
+      }
+    } catch (error: any) {
+      console.error("Error fetching departments:", error);
+      toast.error("Failed to load departments");
+    } finally {
+      setDepartmentsLoading(false);
+    }
+  };
+
+  const onSubmit = async (data: HospitalFormData) => {
+    try {
+      setLoading(true);
+      const token = authStorage.getToken();
+      
+      const response = await axios.put(`http://${BASE_URL}/hospital/${id}`, data, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (response.data.status === 'success') {
+        toast.success("Hospital updated successfully!");
+        navigate("/hospital/list/all");
+      } else {
+        toast.error('Failed to update hospital');
+      }
+    } catch (error: any) {
+      console.error('Error updating hospital:', error);
+      if (error.response?.data?.errors) {
+        // Handle Laravel validation errors
+        const validationErrors = error.response.data.errors;
+        Object.keys(validationErrors).forEach(key => {
+          toast.error(`${key}: ${validationErrors[key][0]}`);
+        });
+      } else {
+        toast.error(error.response?.data?.message || 'Failed to update hospital');
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -116,60 +258,113 @@ export default function EditHospital() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="postalCode">Postal Code *</Label>
-                <Input id="postalCode" {...register("postalCode")} />
-                {errors.postalCode && (
-                  <p className="text-sm text-destructive">{errors.postalCode.message}</p>
+                <Label htmlFor="postal_code">Postal Code *</Label>
+                <Input id="postal_code" {...register("postal_code")} />
+                {errors.postal_code && (
+                  <p className="text-sm text-destructive">{errors.postal_code.message}</p>
                 )}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="phone">Phone Number *</Label>
-                <Input id="phone" {...register("phone")} />
-                {errors.phone && (
-                  <p className="text-sm text-destructive">{errors.phone.message}</p>
+                <Label htmlFor="phone_number">Phone Number *</Label>
+                <Input id="phone_number" {...register("phone_number")} />
+                {errors.phone_number && (
+                  <p className="text-sm text-destructive">{errors.phone_number.message}</p>
                 )}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="license">License Number *</Label>
-                <Input id="license" {...register("license")} />
-                {errors.license && (
-                  <p className="text-sm text-destructive">{errors.license.message}</p>
+                <Label htmlFor="license_number">License Number *</Label>
+                <Input id="license_number" {...register("license_number")} />
+                {errors.license_number && (
+                  <p className="text-sm text-destructive">{errors.license_number.message}</p>
                 )}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="established">Established Date *</Label>
-                <Input id="established" type="date" {...register("established")} />
-                {errors.established && (
-                  <p className="text-sm text-destructive">{errors.established.message}</p>
+                <Label htmlFor="established_date">Established Date *</Label>
+                <Input id="established_date" type="date" {...register("established_date")} />
+                {errors.established_date && (
+                  <p className="text-sm text-destructive">{errors.established_date.message}</p>
                 )}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="manager">Manager *</Label>
-                <Select defaultValue="1">
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select manager" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="1">John Smith</SelectItem>
-                    <SelectItem value="2">Sarah Johnson</SelectItem>
-                  </SelectContent>
-                </Select>
-                {errors.manager && (
-                  <p className="text-sm text-destructive">{errors.manager.message}</p>
+                <Label htmlFor="manager_id">Manager</Label>
+                <Controller
+                  name="manager_id"
+                  control={control}
+                  render={({ field }) => (
+                    <Select onValueChange={field.onChange} value={field.value || ""}>
+                      <SelectTrigger>
+                        <SelectValue placeholder={
+                          managersLoading 
+                            ? "Loading managers..." 
+                            : managers.length === 0 
+                            ? "No managers available" 
+                            : "Select manager"
+                        } />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {!managersLoading && managers.length > 0 && (
+                          managers.map((manager) => (
+                            <SelectItem key={manager.id} value={manager.id.toString()}>
+                              {manager.user ? `${manager.user.first_name} ${manager.user.last_name}` : manager.name || `Manager ${manager.id}`}
+                            </SelectItem>
+                          ))
+                        )}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+                {errors.manager_id && (
+                  <p className="text-sm text-destructive">{errors.manager_id.message}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="department_id">Department</Label>
+                <Controller
+                  name="department_id"
+                  control={control}
+                  render={({ field }) => (
+                    <Select onValueChange={field.onChange} value={field.value || ""}>
+                      <SelectTrigger>
+                        <SelectValue placeholder={
+                          departmentsLoading 
+                            ? "Loading departments..." 
+                            : departments.length === 0 
+                            ? "No departments available" 
+                            : "Select department"
+                        } />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {!departmentsLoading && departments.length > 0 && (
+                          departments.map((department) => (
+                            <SelectItem key={department.id} value={department.id.toString()}>
+                              {department.name}
+                            </SelectItem>
+                          ))
+                        )}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+                {errors.department_id && (
+                  <p className="text-sm text-destructive">{errors.department_id.message}</p>
                 )}
               </div>
             </div>
 
             <div className="flex gap-4">
-              <Button type="submit">Update Hospital</Button>
+              <Button type="submit" disabled={loading}>
+                {loading ? "Updating..." : "Update Hospital"}
+              </Button>
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => navigate("/hospital/list/all")}
+                onClick={() => navigate("/hospital/list")}
+                disabled={loading}
               >
                 Cancel
               </Button>

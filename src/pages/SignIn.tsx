@@ -7,7 +7,12 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Eye, EyeOff, Activity } from "lucide-react";
 import { toast } from "sonner";
 import logo from "../assets/logo.png";
+import axios from "axios";
+import { authStorage } from "@/utils/authStorage";
+
 const SignIn = () => {
+  const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -48,13 +53,40 @@ const SignIn = () => {
 
     setLoading(true);
 
-    // Simulate API call
-    setTimeout(() => {
+
+    axios.post(`http://${BASE_URL}/login`, {
+      email: formData.email,
+      password: formData.password,
+    }).then((response) => {
+
+      console.log("Response:", response.data);
+
+      authStorage.setToken(response.data.data.token);
+      console.log("Stored Token:", authStorage.getToken());
+      
+      // Set authentication flag for ProtectedRoute component
       localStorage.setItem("isAuthenticated", "true");
+      
       toast.success("Signed in successfully!");
       navigate("/dashboard");
+      
+    }).catch((error) => {
+      console.error("SignIn Error:", error);
+      console.error("SignIn Error Response:", error.response);
+      console.error("SignIn Error Data:", error.response?.data);
+
+      toast.error(`Failed to sign in.\n ${error.response?.data?.message || ''}`);
+    }).finally(() => {
       setLoading(false);
-    }, 1000);
+    });
+
+    // // Simulate API call
+    // setTimeout(() => {
+    //   localStorage.setItem("isAuthenticated", "true");
+    //   toast.success("Signed in successfully!");
+    //   navigate("/dashboard");
+    //   setLoading(false);
+    // }, 1000);
   };
 
   return (

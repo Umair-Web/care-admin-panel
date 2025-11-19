@@ -9,6 +9,10 @@ import { Label } from "@/components/ui/label";
 // simplified form: name, price, duration, details
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
+import axios from "axios";
+import { authStorage } from "@/utils/authStorage";
+
+const token = authStorage.getToken();
 
 const SubscriptionSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -20,19 +24,49 @@ const SubscriptionSchema = z.object({
 type SubscriptionFormData = z.infer<typeof SubscriptionSchema>;
 
 export default function AddSubscription() {
+  const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
   const navigate = useNavigate();
   const {
     register,
     handleSubmit,
+    reset,
     formState: { errors },
   } = useForm<SubscriptionFormData>({
     resolver: zodResolver(SubscriptionSchema),
   });
-
+   console.log("Token in AddSubscription:", token);
   const onSubmit = (data: SubscriptionFormData) => {
     console.log(data);
-    toast.success("Subscription created successfully!");
-    navigate("/Subscriptions/all");
+    console.log("Token:", token);
+    axios.post(`http://${BASE_URL}/subscription`, {
+
+      name: data.name,
+      price: data.price,
+      duration: data.duration,
+      details: data.details,
+
+    }, {
+      headers: {
+          'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+     
+    }).then(() => {
+
+      toast.success("Subscription created successfully!");
+      
+      // Clear the form after successful submission
+      reset();
+
+      navigate("/Subscriptions/all");
+
+    }).catch((error) => {
+      console.error("Add Subscription Error:", error);
+      console.error("Add Subscription Error Response:", error.response);
+      console.error("Add Subscription Error Data:", error.response?.data);
+    });
+
   };
 
   return (

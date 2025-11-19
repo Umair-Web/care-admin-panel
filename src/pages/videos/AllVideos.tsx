@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -12,7 +12,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Edit, Trash2, Eye } from "lucide-react";
+import { Edit, Trash2, Eye, Maximize } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,40 +30,85 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
+import axios from "axios";
+import { authStorage } from "@/utils/authStorage";
 
-const mockVideos = [
-  {
-    id: 1,
-    title: "Cardiology Basics",
-    price: 29.99,
-    category: "Medical Education",
-    thumbnail: "",
-    video: "cardiology-basics.mp4",
-    type: "Mobile" as const,
-  },
-  {
-    id: 2,
-    title: "VR Surgery Simulation",
-    price: 49.99,
-    category: "Training",
-    thumbnail: "",
-    video: "vr-surgery.mp4",
-    type: "VR" as const,
-  },
-];
+const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const token = authStorage.getToken();
+
+interface Video {
+  id: number;
+  title: string;
+  category_id: number;
+  category: {
+    id: number;
+    name: string;
+  };
+  image: string;
+  video: string;
+  type: string;
+  created_at: string;
+  updated_at: string;
+}
 
 export default function AllVideos() {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [fullscreenVideo, setFullscreenVideo] = useState<Video | null>(null);
+  const [videos, setVideos] = useState<Video[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const filteredVideos = mockVideos.filter((video) =>
+  const filteredVideos = videos.filter((video) =>
     video.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleDelete = () => {
-    toast.success("Video deleted successfully!");
-    setDeleteId(null);
+  useEffect(() => {
+    fetchVideos();
+  }, []);
+
+  const fetchVideos = () => {
+    setLoading(true);
+    axios
+      .get(`http://${BASE_URL}/videos`, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      .then((response) => {
+        console.log("Fetched videos:", response.data);
+        if (response.data.videos) {
+          setVideos(response.data.videos);
+        }
+        setLoading(false);
+      })
+      .catch((error) => {
+        console.error("Error fetching videos:", error);
+        console.error("Error response:", error.response);
+        setLoading(false);
+      });
+  };
+
+  const handleDelete = async () => {
+    try {
+      await axios.delete(`http://${BASE_URL}/video/${deleteId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        data: {
+          id: deleteId
+        }
+      });
+
+      toast.success("Video deleted successfully!");
+      setDeleteId(null);
+      fetchVideos();
+    } catch (error: any) {
+      console.error("Delete error:", error);
+      const errorMessage = error.response?.data?.message || "Failed to delete video";
+      toast.error(errorMessage);
+    }
   };
 
   return (
@@ -88,7 +139,6 @@ export default function AllVideos() {
                 <TableRow>
                   <TableHead>ID</TableHead>
                   <TableHead>Title</TableHead>
-                  <TableHead>Price</TableHead>
                   <TableHead>Category</TableHead>
                   <TableHead>Thumbnail</TableHead>
                   <TableHead>Video</TableHead>
@@ -97,44 +147,100 @@ export default function AllVideos() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredVideos.map((video) => (
-                  <TableRow key={video.id}>
-                    <TableCell>{video.id}</TableCell>
-                    <TableCell className="font-medium">{video.title}</TableCell>
-                    <TableCell>${video.price.toFixed(2)}</TableCell>
-                    <TableCell>{video.category}</TableCell>
-                    <TableCell>
-                      <div className="h-10 w-16 bg-muted rounded"></div>
-                    </TableCell>
-                    <TableCell>{video.video}</TableCell>
-                    <TableCell>
-                      <Badge variant={video.type === "VR" ? "default" : "secondary"}>
-                        {video.type}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Button variant="ghost" size="icon">
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => navigate(`/videos/edit/${video.id}`, { state: video })}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => setDeleteId(video.id)}
-                        >
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                      </div>
+                {loading ? (
+                  <TableRow>
+                    <TableCell colSpan={8} className="text-center py-4">
+                      Loading videos...
                     </TableCell>
                   </TableRow>
-                ))}
+                ) : filteredVideos.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={8} className="text-center py-4 text-muted-foreground">
+                      No videos found
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filteredVideos.map((video) => (
+                    <TableRow key={video.id}>
+                      <TableCell>{video.id}</TableCell>
+                      <TableCell className="font-medium">{video.title}</TableCell>
+                      <TableCell>{video.category?.name || "N/A"}</TableCell>
+                      <TableCell>
+                        {video.image ? (
+                          <img
+                            src={`http://${BASE_URL}/storage/${video.image}`}
+                            alt={video.title}
+                            className="h-10 w-16 object-cover rounded"
+                          />
+                        ) : (
+                          <div className="h-10 w-16 bg-muted rounded"></div>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {video.video ? (
+                          <div className="relative group">
+                            <video
+                              src={`http://${BASE_URL}/storage/${video.video}`}
+                              controls
+                              className="h-20 w-32 rounded cursor-pointer"
+                              preload="metadata"
+                              onClick={() => setFullscreenVideo(video)}
+                            >
+                              Your browser does not support the video tag.
+                            </video>
+                            <div 
+                              className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 rounded flex items-center justify-center cursor-pointer transition-all"
+                              onClick={() => setFullscreenVideo(video)}
+                            >
+                              <Maximize className="h-6 w-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="h-20 w-32 bg-muted rounded flex items-center justify-center text-xs text-muted-foreground">
+                            No Video
+                          </div>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="secondary">
+                          {video.type || "Default"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
+                            onClick={() => navigate(`/videos/details/${video.id}`)}
+                            title="View Details"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() =>
+                              navigate(`/videos/edit/${video.id}`, {
+                                state: video,
+                              })
+                            }
+                            title="Edit Video"
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => setDeleteId(video.id)}
+                            title="Delete Video"
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
               </TableBody>
             </Table>
           </div>
@@ -152,6 +258,28 @@ export default function AllVideos() {
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* Fullscreen Video Dialog */}
+      <Dialog open={fullscreenVideo !== null} onOpenChange={() => setFullscreenVideo(null)}>
+        <DialogContent className="max-w-7xl w-full h-[90vh] p-2">
+          <DialogHeader>
+            <DialogTitle>{fullscreenVideo?.title}</DialogTitle>
+          </DialogHeader>
+          <div className="flex-1 flex items-center justify-center">
+            {fullscreenVideo?.video && (
+              <video
+                src={`http://${BASE_URL}/storage/${fullscreenVideo.video}`}
+                controls
+                autoPlay
+                className="w-full h-full max-h-[calc(90vh-80px)] object-contain"
+                preload="metadata"
+              >
+                Your browser does not support the video tag.
+              </video>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <AlertDialog open={deleteId !== null} onOpenChange={() => setDeleteId(null)}>
         <AlertDialogContent>

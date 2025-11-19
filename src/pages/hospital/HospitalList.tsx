@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Table,
@@ -24,52 +25,94 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
+import { authStorage } from "@/utils/authStorage";
 
-const mockHospitals = [
-  {
-    id: 1,
-    name: "City General Hospital ss",
-    address: "123 Main St",
-    city: "New York",
-    state: "NY",
-    phone: "+1-555-0101",
-    email: "info@citygeneral.com",
-    license: "LIC-2024-001",
-    established: "2010-05-15",
-    manager: "John Smith",
-    departments: "Cardiology, Surgery",
-    postalCode: "10001",
-    isActive: true,
-  },
-  {
-    id: 2,
-    name: "Memorial Medical Center",
-    address: "456 Oak Ave",
-    city: "Los Angeles",
-    state: "CA",
-    phone: "+1-555-0102",
-    email: "contact@memorial.com",
-    license: "LIC-2024-002",
-    established: "2015-08-20",
-    manager: "Sarah Johnson",
-    departments: "Emergency, Pediatrics",
-    postalCode: "90001",
-    isActive: true,
-  },
-];
+interface Hospital {
+  id: number;
+  name: string;
+  address: string;
+  city: string;
+  state: string;
+  phone_number: string;
+  email: string;
+  license_number: string;
+  established_date: string;
+  postal_code: string;
+  manager?: { id: number; name: string; };
+  department?: { id: number; name: string; };
+  created_at: string;
+  updated_at: string;
+}
 
 export default function HospitalList() {
+  
+  const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+  const token = authStorage.getToken();
+
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [hospitals, setHospitals] = useState<Hospital[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const filteredHospitals = mockHospitals.filter((hospital) =>
+  const filteredHospitals = hospitals.filter((hospital) =>
     hospital.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleDelete = () => {
-    toast.success("Hospital deleted successfully!");
-    setDeleteId(null);
+  useEffect(() => {
+    fetchHospitals();
+  }, []);
+
+  const fetchHospitals = async () => {
+    try {
+      setLoading(true);
+      
+      const response = await axios.get(`http://${BASE_URL}/hospitals`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      
+      if (response.data.status === 'success') {
+        setHospitals(response.data.data);
+        console.log('Fetched hospitals:', response.data.data);
+        setError(null);
+      } else {
+        setError('Failed to fetch hospitals');
+      }
+    } catch (error: any) {
+      console.error('Error fetching hospitals:', error);
+      setError(error.response?.data?.message || 'Failed to fetch hospitals');
+      toast.error(error.response?.data?.message || 'Failed to fetch hospitals');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!deleteId) return;
+    
+    try {
+      const response = await axios.delete(`http://${BASE_URL}/hospital/${deleteId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      
+      if (response.data.status === 'success') {
+        toast.success("Hospital deleted successfully!");
+        console.log('Delete response:', response.data);
+        setHospitals(hospitals.filter(hospital => hospital.id !== deleteId));
+      } else {
+        toast.error('Failed to delete hospital');
+      }
+    } catch (error: any) {
+      console.error('Error deleting hospital:', error);
+      toast.error(error.response?.data?.message || 'Failed to delete hospital');
+    } finally {
+      setDeleteId(null);
+    }
   };
 
   const toggleActive = (id: number) => {
@@ -112,59 +155,73 @@ export default function HospitalList() {
                   <TableHead>License</TableHead>
                   <TableHead>Established</TableHead>
                   <TableHead>Manager</TableHead>
-                  <TableHead>Departments</TableHead>
+                  <TableHead>Department</TableHead>
                   <TableHead>Postal Code</TableHead>
-                  <TableHead>Status</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredHospitals.map((hospital) => (
-                  <TableRow key={hospital.id}>
-                    <TableCell>{hospital.id}</TableCell>
-                    <TableCell className="font-medium">{hospital.name}</TableCell>
-                    <TableCell>{hospital.address}</TableCell>
-                    <TableCell>{hospital.city}</TableCell>
-                    <TableCell>{hospital.state}</TableCell>
-                    <TableCell>{hospital.phone}</TableCell>
-                    <TableCell>{hospital.email}</TableCell>
-                    <TableCell>{hospital.license}</TableCell>
-                    <TableCell>{hospital.established}</TableCell>
-                    <TableCell>{hospital.manager}</TableCell>
-                    <TableCell>{hospital.departments}</TableCell>
-                    <TableCell>{hospital.postalCode}</TableCell>
-                    <TableCell>
-                      <Badge variant={hospital.isActive ? "default" : "secondary"}>
-                        {hospital.isActive ? "Active" : "Inactive"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => navigate(`/hospital/list/edit/${hospital.id}`,{state: hospital})}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => toggleActive(hospital.id)}
-                        >
-                          <Power className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => setDeleteId(hospital.id)}
-                        >
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                      </div>
+                {loading ? (
+                  <TableRow>
+                    <TableCell colSpan={13} className="text-center py-4">
+                      Loading hospitals...
                     </TableCell>
                   </TableRow>
-                ))}
+                ) : error ? (
+                  <TableRow>
+                    <TableCell colSpan={13} className="text-center py-4 text-destructive">
+                      {error}
+                    </TableCell>
+                  </TableRow>
+                ) : filteredHospitals.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={13} className="text-center py-4">
+                      No hospitals found
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filteredHospitals.map((hospital) => (
+                    <TableRow key={hospital.id}>
+                      <TableCell>{hospital.id}</TableCell>
+                      <TableCell className="font-medium">{hospital.name}</TableCell>
+                      <TableCell>{hospital.address}</TableCell>
+                      <TableCell>{hospital.city}</TableCell>
+                      <TableCell>{hospital.state}</TableCell>
+                      <TableCell>{hospital.phone_number}</TableCell>
+                      <TableCell>{hospital.email}</TableCell>
+                      <TableCell>{hospital.license_number}</TableCell>
+                      <TableCell>{hospital.established_date}</TableCell>
+                      <TableCell>{hospital.manager?.user.first_name || 'N/A'}</TableCell>
+                      <TableCell>{hospital.department?.name || 'N/A'}</TableCell>
+                      <TableCell>{hospital.postal_code}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => navigate(`/hospital/list/edit/${hospital.id}`, { state: hospital })}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          {/* <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => toggleActive(hospital.id)}
+                          >
+                            <Power className="h-4 w-4" />
+                          </Button> */}
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => setDeleteId(hospital.id)}
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
               </TableBody>
             </Table>
           </div>

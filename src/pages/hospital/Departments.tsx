@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -24,24 +24,96 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
+import axios from "axios";
+import { authStorage } from "@/utils/authStorage";
 
-const mockDepartments = [
-  { id: 1, Department: "Medical" },
-  { id: 2, Department: "Information Technology" },
-];
+const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const token = authStorage.getToken();
+
+interface Department {
+  id: number;
+  name: string;
+  created_at?: string;
+  updated_at?: string;
+}
 
 export default function Departments() {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
 
-  const filteredDepartments = mockDepartments.filter((s) =>
-    s.Department.toLowerCase().includes(searchTerm.toLowerCase())
+  // Fetch departments from API
+  useEffect(() => {
+    fetchDepartments();
+  }, []);
+
+  const fetchDepartments = async () => {
+    try {
+      setLoading(true);
+      console.log("Fetching departments...");
+      
+      const response = await axios.get(`http://${BASE_URL}/departments`, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      console.log("Departments response:", response.data);
+
+      if (response.data.status === 'success') {
+        setDepartments(response.data.data);
+      } else {
+        toast.error("Failed to load departments");
+      }
+    } catch (error: any) {
+      console.error("Error fetching departments:", error);
+      toast.error("Failed to load departments");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filteredDepartments = departments.filter((dept) =>
+    dept.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleDelete = () => {
-    toast.success("Department deleted successfully!");
-    setDeleteId(null);
+  const handleDelete = async () => {
+    if (!deleteId) return;
+
+    try {
+      setDeletingId(deleteId);
+      console.log(`Deleting department with ID: ${deleteId}`);
+      
+      const response = await axios.delete(`http://${BASE_URL}/department/${deleteId}`, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      console.log("Delete response:", response.data);
+
+      if (response.data.status === 'success') {
+        toast.success("Department deleted successfully!");
+        // Remove deleted department from local state
+        setDepartments(departments.filter(dept => dept.id !== deleteId));
+      } else {
+        toast.error("Failed to delete department");
+      }
+    } catch (error: any) {
+      console.error("Error deleting department:", error);
+      const errorMessage = 
+        error.response?.data?.message ||
+        "Failed to delete department";
+      toast.error(errorMessage);
+    } finally {
+      setDeletingId(null);
+      setDeleteId(null);
+    }
   };
 
   return (
@@ -76,26 +148,48 @@ export default function Departments() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredDepartments.map((s) => (
-                  <TableRow key={s.id}>
-                    <TableCell>{s.id}</TableCell>
-                    <TableCell className="font-medium">{s.Department}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => navigate(`/hospital/Departments/edit/${s.id}`, { state: s })}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon" onClick={() => setDeleteId(s.id)}>
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
+                {loading ? (
+                  <TableRow>
+                    <TableCell colSpan={3} className="text-center py-8">
+                      <div className="flex items-center justify-center">
+                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900 mr-2"></div>
+                        Loading departments...
                       </div>
                     </TableCell>
                   </TableRow>
-                ))}
+                ) : filteredDepartments.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={3} className="text-center py-8 text-muted-foreground">
+                      {searchTerm ? "No departments found matching your search" : "No departments found"}
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filteredDepartments.map((dept) => (
+                    <TableRow key={dept.id}>
+                      <TableCell>{dept.id}</TableCell>
+                      <TableCell className="font-medium">{dept.name}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => navigate(`/hospital/Departments/edit/${dept.id}`, { state: dept })}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            onClick={() => setDeleteId(dept.id)}
+                            disabled={deletingId === dept.id}
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
               </TableBody>
             </Table>
           </div>
@@ -123,8 +217,10 @@ export default function Departments() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
+            <AlertDialogCancel disabled={!!deletingId}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} disabled={!!deletingId}>
+              {deletingId ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

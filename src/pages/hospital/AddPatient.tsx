@@ -1,10 +1,13 @@
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { useNavigate } from "react-router-dom";
+import axios from "axios";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -12,45 +15,200 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
+import { authStorage } from "@/utils/authStorage";
 
-const PatientSchema = z
-  .object({
-    firstName: z.string().min(1, "First name is required"),
-    lastName: z.string().min(1, "Last name is required"),
-    email: z.string().email("Invalid email address"),
-    password: z.string().min(6, "Password must be at least 6 characters"),
-    confirmPassword: z.string().min(1, "Please confirm password"),
-    phone: z.string().min(1, "Phone number is required"),
-    dob: z.string().min(1, "Date of birth is required"),
-    gender: z.string().min(1, "Gender is required"),
-    address: z.string().min(1, "Address is required"),
-    hospital: z.string().min(1, "Hospital is required"),
-    assignedDoctor: z.string().min(1, "Assigned doctor is required"),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    path: ["confirmPassword"],
-    message: "Passwords do not match",
-  });
+const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const token = authStorage.getToken();
 
-type PatientFormData = z.infer<typeof PatientSchema>;
+const patientSchema = z.object({
+  first_name: z.string().min(2, "First name must be at least 2 characters"),
+  last_name: z.string().min(2, "Last name must be at least 2 characters"),
+  email: z.string().email("Invalid email address"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
+  date_of_birth: z.string().min(1, "Date of birth is required"),
+  gender: z.string().min(1, "Gender is required"),
+  address: z.string().min(5, "Address must be at least 5 characters"),
+  hospital_id: z.string().min(1, "Hospital is required"),
+  doctor_id: z.string().min(1, "Doctor is required"),
+  profile_image: z.any().optional(),
+});
+
+type PatientFormData = z.infer<typeof patientSchema>;
+
+interface Hospital {
+  id: number;
+  name: string;
+}
+
+interface Doctor {
+  id: number;
+  fullname: string;
+  hospital_id: number;
+}
 
 export default function AddPatient() {
   const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(false);
+  const [hospitals, setHospitals] = useState<Hospital[]>([]);
+  const [doctors, setDoctors] = useState<Doctor[]>([]);
+  const [allDoctors, setAllDoctors] = useState<Doctor[]>([]);
+  const [profileImage, setProfileImage] = useState<File | null>(null);
+  const [profileImagePreview, setProfileImagePreview] = useState<string>("");
+  const [loadingHospitals, setLoadingHospitals] = useState(true);
+  const [loadingDoctors, setLoadingDoctors] = useState(true);
+
   const {
     register,
     handleSubmit,
     control,
     formState: { errors },
+    watch,
+    reset,
   } = useForm<PatientFormData>({
-    resolver: zodResolver(PatientSchema),
+    resolver: zodResolver(patientSchema),
   });
 
-  const onSubmit = (data: PatientFormData) => {
-    console.log(data);
-    toast.success("Patient created successfully!");
-    navigate("/hospital/Patients");
+  const selectedHospitalId = watch("hospital_id");
+
+  useEffect(() => {
+    fetchHospitals();
+    fetchDoctors();
+  }, []);
+
+  // Filter doctors when hospital changes
+  useEffect(() => {
+    if (selectedHospitalId && allDoctors.length > 0) {
+      const filteredDoctors = allDoctors.filter(
+        (doctor) => doctor.hospital_id === parseInt(selectedHospitalId)
+      );
+      setDoctors(filteredDoctors);
+    } else {
+      setDoctors([]);
+    }
+  }, [selectedHospitalId, allDoctors]);
+
+  const fetchHospitals = async () => {
+    try {
+      setLoadingHospitals(true);
+      const response = await axios.get(`http://${BASE_URL}/hospitals`, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.data.status === "success" && response.data.data) {
+        setHospitals(response.data.data);
+      }
+    } catch (error) {
+      console.error("Error fetching hospitals:", error);
+      toast.error("Failed to load hospitals");
+    } finally {
+      setLoadingHospitals(false);
+    }
+  };
+
+  const fetchDoctors = async () => {
+    try {
+      setLoadingDoctors(true);
+      const response = await axios.get(`http://${BASE_URL}/doctors`, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.data.status === "success" && response.data.data) {
+        setAllDoctors(response.data.data);
+      }
+    } catch (error) {
+      console.error("Error fetching doctors:", error);
+      toast.error("Failed to load doctors");
+    } finally {
+      setLoadingDoctors(false);
+    }
+  };
+
+  const handleProfileImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setProfileImage(file);
+      const reader = new FileReader();
+      reader.onload = () => {
+        setProfileImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const onSubmit = async (data: PatientFormData) => {
+    try {
+      setIsLoading(true);
+
+      const formData = new FormData();
+      formData.append("first_name", data.first_name);
+      formData.append("last_name", data.last_name);
+      formData.append("email", data.email);
+      formData.append("password", data.password);
+      formData.append("date_of_birth", data.date_of_birth);
+      formData.append("gender", data.gender);
+      formData.append("address", data.address);
+      formData.append("hospital_id", data.hospital_id);
+      formData.append("doctor_id", data.doctor_id);
+      formData.append("created_by", '1');
+
+      if (profileImage) {
+        formData.append("profile_image", profileImage);
+      }
+
+      console.log("Submitting patient data:", Object.fromEntries(formData));
+
+      const response = await axios.post(
+        `http://${BASE_URL}/api/patient`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      console.log("Patient creation response:", response.data);
+
+      if (response.data.status === "success") {
+        toast.success("Patient added successfully!");
+        reset();
+        setProfileImage(null);
+        setProfileImagePreview("");
+        navigate("/hospital/patients/all");
+      } else {
+        toast.error("Failed to add patient");
+      }
+    } catch (error: any) {
+      console.error("Error adding patient:", error);
+
+      if (error.response?.data?.errors) {
+        const errorMessages = Object.values(error.response.data.errors).flat();
+        toast.error(`Validation Error: ${errorMessages.join(", ")}`);
+      } else {
+        toast.error(error.response?.data?.message || "Failed to add patient");
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const getInitials = (firstName: string, lastName: string) => {
+    return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
   };
 
   return (
@@ -65,20 +223,40 @@ export default function AddPatient() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <div className="flex items-center gap-4 mb-6">
+              <Avatar className="h-24 w-24">
+                <AvatarImage src={profileImagePreview} />
+                <AvatarFallback>PT</AvatarFallback>
+              </Avatar>
+              <div>
+                <Label htmlFor="profile_image">Profile Image</Label>
+                <Input
+                  id="profile_image"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleProfileImageChange}
+                />
+              </div>
+            </div>
+
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="firstName">First Name *</Label>
-                <Input id="firstName" {...register("firstName")} />
-                {errors.firstName && (
-                  <p className="text-sm text-destructive">{errors.firstName.message}</p>
+                <Label htmlFor="first_name">First Name *</Label>
+                <Input id="first_name" {...register("first_name")} />
+                {errors.first_name && (
+                  <p className="text-sm text-destructive">
+                    {errors.first_name.message}
+                  </p>
                 )}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="lastName">Last Name *</Label>
-                <Input id="lastName" {...register("lastName")} />
-                {errors.lastName && (
-                  <p className="text-sm text-destructive">{errors.lastName.message}</p>
+                <Label htmlFor="last_name">Last Name *</Label>
+                <Input id="last_name" {...register("last_name")} />
+                {errors.last_name && (
+                  <p className="text-sm text-destructive">
+                    {errors.last_name.message}
+                  </p>
                 )}
               </div>
 
@@ -86,125 +264,169 @@ export default function AddPatient() {
                 <Label htmlFor="email">Email *</Label>
                 <Input id="email" type="email" {...register("email")} />
                 {errors.email && (
-                  <p className="text-sm text-destructive">{errors.email.message}</p>
+                  <p className="text-sm text-destructive">
+                    {errors.email.message}
+                  </p>
                 )}
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="password">Password *</Label>
-                <Input id="password" type="password" {...register("password")} />
+                <Input
+                  id="password"
+                  type="password"
+                  {...register("password")}
+                />
                 {errors.password && (
-                  <p className="text-sm text-destructive">{errors.password.message}</p>
+                  <p className="text-sm text-destructive">
+                    {errors.password.message}
+                  </p>
                 )}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirm Password *</Label>
-                <Input id="confirmPassword" type="password" {...register("confirmPassword")} />
-                {errors.confirmPassword && (
-                  <p className="text-sm text-destructive">{errors.confirmPassword.message}</p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="phone">Phone Number *</Label>
-                <Input id="phone" {...register("phone")} />
-                {errors.phone && (
-                  <p className="text-sm text-destructive">{errors.phone.message}</p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="dob">Date of Birth *</Label>
-                <Input id="dob" type="date" {...register("dob")} />
-                {errors.dob && (
-                  <p className="text-sm text-destructive">{errors.dob.message}</p>
+                <Label htmlFor="date_of_birth">Date of Birth *</Label>
+                <Input
+                  id="date_of_birth"
+                  type="date"
+                  {...register("date_of_birth")}
+                />
+                {errors.date_of_birth && (
+                  <p className="text-sm text-destructive">
+                    {errors.date_of_birth.message}
+                  </p>
                 )}
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="gender">Gender *</Label>
                 <Controller
-                  control={control}
                   name="gender"
+                  control={control}
                   render={({ field }) => (
-                    <Select onValueChange={field.onChange} value={field.value}>
+                    <Select value={field.value} onValueChange={field.onChange}>
                       <SelectTrigger>
                         <SelectValue placeholder="Select gender" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="female">Female</SelectItem>
                         <SelectItem value="male">Male</SelectItem>
+                        <SelectItem value="female">Female</SelectItem>
                         <SelectItem value="other">Other</SelectItem>
                       </SelectContent>
                     </Select>
                   )}
                 />
                 {errors.gender && (
-                  <p className="text-sm text-destructive">{errors.gender.message}</p>
+                  <p className="text-sm text-destructive">
+                    {errors.gender.message}
+                  </p>
                 )}
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="address">Address *</Label>
-                <Input id="address" {...register("address")} />
+                <Textarea
+                  id="address"
+                  {...register("address")}
+                  placeholder="Enter full address"
+                  rows={3}
+                />
                 {errors.address && (
-                  <p className="text-sm text-destructive">{errors.address.message}</p>
+                  <p className="text-sm text-destructive">
+                    {errors.address.message}
+                  </p>
                 )}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="hospital">Hospital *</Label>
+                <Label htmlFor="hospital_id">Hospital *</Label>
                 <Controller
+                  name="hospital_id"
                   control={control}
-                  name="hospital"
                   render={({ field }) => (
-                    <Select onValueChange={field.onChange} value={field.value}>
+                    <Select value={field.value} onValueChange={field.onChange}>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select hospital" />
+                        <SelectValue
+                          placeholder={
+                            loadingHospitals
+                              ? "Loading hospitals..."
+                              : "Select hospital"
+                          }
+                        />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="central">Central Hospital</SelectItem>
-                        <SelectItem value="northside">Northside Clinic</SelectItem>
-                        <SelectItem value="westend">Westend Medical</SelectItem>
+                        {hospitals.map((hospital) => (
+                          <SelectItem
+                            key={hospital.id}
+                            value={hospital.id.toString()}
+                          >
+                            {hospital.name}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   )}
                 />
-                {errors.hospital && (
-                  <p className="text-sm text-destructive">{errors.hospital.message}</p>
+                {errors.hospital_id && (
+                  <p className="text-sm text-destructive">
+                    {errors.hospital_id.message}
+                  </p>
                 )}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="assignedDoctor">Assign Doctor *</Label>
+                <Label htmlFor="doctor_id">Doctor *</Label>
                 <Controller
+                  name="doctor_id"
                   control={control}
-                  name="assignedDoctor"
                   render={({ field }) => (
-                    <Select onValueChange={field.onChange} value={field.value}>
+                    <Select
+                      value={field.value}
+                      onValueChange={field.onChange}
+                      disabled={!selectedHospitalId || doctors.length === 0}
+                    >
                       <SelectTrigger>
-                        <SelectValue placeholder="Select doctor" />
+                        <SelectValue
+                          placeholder={
+                            !selectedHospitalId
+                              ? "Select hospital first"
+                              : loadingDoctors
+                              ? "Loading doctors..."
+                              : doctors.length === 0
+                              ? "No doctors available"
+                              : "Select doctor"
+                          }
+                        />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="doctor1">Doctor1 Valov</SelectItem>
-                        <SelectItem value="doctor2">Doctor2 Johnson</SelectItem>
+                        {doctors.map((doctor) => (
+                          <SelectItem
+                            key={doctor.id}
+                            value={doctor.id.toString()}
+                          >
+                            {doctor.fullname}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   )}
                 />
-                {errors.assignedDoctor && (
-                  <p className="text-sm text-destructive">{errors.assignedDoctor.message}</p>
+                {errors.doctor_id && (
+                  <p className="text-sm text-destructive">
+                    {errors.doctor_id.message}
+                  </p>
                 )}
               </div>
             </div>
 
             <div className="flex gap-4">
-              <Button type="submit"  onClick={() => navigate("/hospital/patients/all")}>Create Patient</Button>
+              <Button type="submit" disabled={isLoading}>
+                {isLoading ? "Creating..." : "Create Patient"}
+              </Button>
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => navigate("/hospital/patients/all")}
+                onClick={() => navigate("/hospital/patients")}
               >
                 Cancel
               </Button>

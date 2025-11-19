@@ -2,17 +2,21 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-// select components removed (not used in this simplified form)
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
+import axios from "axios";
+import { authStorage } from "@/utils/authStorage";
+
+const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const token = authStorage.getToken();
 
 const DepartmentSchema = z.object({
-  // require at least one non-space character
-  Department: z.string().refine((s) => s.trim().length > 0, {
-    message: "Department is required",
+  name: z.string().refine((s) => s.trim().length > 0, {
+    message: "Department name is required",
   }),
 });
 
@@ -20,20 +24,48 @@ type DepartmentFormData = z.infer<typeof DepartmentSchema>;
 
 export default function AddDepartment() {
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
   const {
     register,
     handleSubmit,
-    control,
     formState: { errors },
   } = useForm<DepartmentFormData>({
     resolver: zodResolver(DepartmentSchema),
   });
 
-  const onSubmit = (data: DepartmentFormData) => {
-    console.log(data);
-    toast.success("Department created successfully!");
-    // navigate to the Departments list (consistent with other pages)
-    navigate("/hospital/Departments/all");
+  const onSubmit = async (data: DepartmentFormData) => {
+    try {
+      setLoading(true);
+      console.log("Creating department:", data);
+
+      const response = await axios.post(
+        `http://${BASE_URL}/department`,
+        { name: data.name },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      console.log("Department created:", response.data);
+
+      if (response.data.status === 'success') {
+        toast.success("Department created successfully!");
+        navigate("/hospital/Departments/all");
+      } else {
+        toast.error("Failed to create department");
+      }
+    } catch (error: any) {
+      console.error("Error creating department:", error);
+      const errorMessage = 
+        error.response?.data?.message ||
+        "Failed to create department";
+      toast.error(errorMessage);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -50,16 +82,18 @@ export default function AddDepartment() {
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="Department">Department *</Label>
-                <Input id="Department" {...register("Department")} />
-                {errors.Department && (
-                  <p className="text-sm text-destructive">{errors.Department.message}</p>
+                <Label htmlFor="name">Department Name *</Label>
+                <Input id="name" {...register("name")} />
+                {errors.name && (
+                  <p className="text-sm text-destructive">{errors.name.message}</p>
                 )}
               </div>
             </div>
 
             <div className="flex gap-4">
-              <Button type="submit">Create Department</Button>
+              <Button type="submit" disabled={loading}>
+                {loading ? "Creating..." : "Create Department"}
+              </Button>
               <Button
                 type="button"   
                 variant="outline"

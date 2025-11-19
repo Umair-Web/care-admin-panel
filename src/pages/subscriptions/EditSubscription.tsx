@@ -9,6 +9,12 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 
+import { authStorage } from "@/utils/authStorage";
+import axios from "axios";
+
+
+const token = authStorage.getToken();
+
 const SubscriptionSchema = z.object({
   name: z.string().min(1, "Name is required"),
   price: z.preprocess((v) => Number(v), z.number().min(0, "Price is required")),
@@ -19,6 +25,9 @@ const SubscriptionSchema = z.object({
 type SubscriptionFormData = z.infer<typeof SubscriptionSchema>;
 
 export default function EditSubscription() {
+
+  const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
   const { id } = useParams();
   const location = useLocation();
   const subscription = (location.state || {}) as Partial<{
@@ -28,6 +37,8 @@ export default function EditSubscription() {
     details: string;
     duration: string;
   }>;
+
+  console.log("Editing subscription with data:", subscription);
 
   const navigate = useNavigate();
   const [preview, setPreview] = useState<string>("");
@@ -69,16 +80,47 @@ export default function EditSubscription() {
     }
   };
 
-  const onSubmit = (data: SubscriptionFormData) => {
-    const payload = {
-      id: subscription.id,
-      ...data,
-    };
-    console.log("Updated subscription:", payload);
-    toast.success("Subscription updated successfully!");
-    navigate("/subscriptions/all");
+  const onSubmit = async (data: SubscriptionFormData) => {
+
+
+    console.log("Token in EditSubscription:", token);
+    console.log("Editing subscription name:", data.name);
+    console.log("Editing details:", data.details);
+    console.log("Editing price:", data.price);
+    console.log("Editing duration:", data.duration);
+
+    try {
+
+      await axios.put(`http://${BASE_URL}/subscription/${subscription.id}`, {
+
+        name: data.name,
+        price: data.price,
+        duration: data.duration,
+        details: data.details,
+
+      }, {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+
+      }).then(() => {
+        toast.success("Subscription updated successfully!");
+        // Navigate back to the list after successful update
+        navigate("/subscriptions/all");
+      }).catch((error) => {
+        console.log("Error updating subscription:", error);
+        toast.error("Failed to update subscription.");
+      });
+
+    } catch (error) {
+      console.log("Error updating subscription:", error);
+      toast.error("Failed to update subscription.");
+    }
   };
 
+
+ 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">

@@ -7,7 +7,13 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Eye, EyeOff, Activity } from "lucide-react";
 import { toast } from "sonner";
 
+import axios from "axios";
+
+import { authStorage } from "@/utils/authStorage";
+
 const SignUp = () => {
+  const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -108,13 +114,37 @@ const SignUp = () => {
     }
 
     setLoading(true);
+    console.log("Form Data:", formData);
+    console.log("Firstname:", formData.firstName);
+
+    axios.post(`http://${BASE_URL}/api/signup`, {
+      first_name: formData.firstName,
+      last_name: formData.lastName,
+      email: formData.email,
+      password: formData.password,
+    }).then((response) => {
+      console.log("Response:", response.data);
+      authStorage.setToken(response.data.data);
+      toast.success("Account created successfully!");
+      navigate("/dashboard");
+    }).catch((error) => {
+      console.error("SignUp Error:", error);
+      console.error("SignUp Error Response:", error.response);
+      console.error("SignUp Error Data:", error.response?.data);  
+
+      toast.error(`Failed to create account.\n ${error.response?.data?.message || ''}`);
+    }).finally(() => {
+      setLoading(false);
+    });
 
     // Simulate API call
-    setTimeout(() => {
-      toast.success("Account created successfully!");
-      navigate("/signin");
-      setLoading(false);
-    }, 1000);
+    // setTimeout(() => {
+    //   toast.success("Account created successfully!");
+    //   navigate("/signin");
+    //   setLoading(false);
+    // }, 1000);
+
+
   };
 
   return (
@@ -189,7 +219,7 @@ const SignUp = () => {
 
             <div className="space-y-2">
               <Label htmlFor="password">
-                Password <span className="text-destructive">*</span>
+                Password <span className="text-destructive">* Must be at least 8 characters long</span>
               </Label>
               <div className="relative">
                 <Input
@@ -219,15 +249,14 @@ const SignUp = () => {
                     {[1, 2, 3, 4].map((level) => (
                       <div
                         key={level}
-                        className={`h-1 flex-1 rounded-full transition-colors ${
-                          level <= passwordStrength.strength
+                        className={`h-1 flex-1 rounded-full transition-colors ${level <= passwordStrength.strength
                             ? passwordStrength.strength <= 2
                               ? "bg-destructive"
                               : passwordStrength.strength === 3
-                              ? "bg-warning"
-                              : "bg-success"
+                                ? "bg-warning"
+                                : "bg-success"
                             : "bg-muted"
-                        }`}
+                          }`}
                       />
                     ))}
                   </div>
