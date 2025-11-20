@@ -27,7 +27,7 @@ const patientSchema = z.object({
   first_name: z.string().min(2, "First name must be at least 2 characters"),
   last_name: z.string().min(2, "Last name must be at least 2 characters"),
   email: z.string().email("Invalid email address"),
-  // password: z.string().min(6, "Password must be at least 6 characters").optional(),
+  password: z.string().optional(),
   date_of_birth: z.string().min(1, "Date of birth is required"),
   gender: z.string().min(1, "Gender is required"),
   address: z.string().min(5, "Address must be at least 5 characters"),
@@ -42,10 +42,10 @@ interface Patient {
   id: number;
   user_id: number;
   date_of_birth: string;
-  gender: string;
-  address: string;
-  hospital_id: number;
-  doctor_id: number;
+  gender?: string;
+  address?: string;
+  hospital_id?: number;
+  doctor_id?: number;
   user?: {
     id: number;
     first_name: string;
@@ -103,6 +103,7 @@ export default function EditPatient() {
       first_name: "",
       last_name: "",
       email: "",
+      password: "",
       date_of_birth: "",
       gender: "",
       address: "",
@@ -131,12 +132,26 @@ export default function EditPatient() {
   };
 
   // Get image URL with proper Laravel storage handling
-  const getImageUrl = (imagePath?: string) => {
-    if (!imagePath) return "";
-    if (imagePath.startsWith('http')) {
-      return imagePath;
+  const getImageUrl = (profileImage?: string): string => {
+    if (!profileImage) return "";
+    
+    // If already starts with http or https, return as is
+    if (profileImage.startsWith('http')) {
+      return profileImage;
     }
-    return `http://${BASE_URL}${imagePath}`;
+    
+    // If starts with /storage, prepend base URL only
+    if (profileImage.startsWith('/storage')) {
+      return `http://${BASE_URL}${profileImage}`;
+    }
+    
+    // If starts with assets/, it's in public directory (no /storage/ prefix needed)
+    if (profileImage.startsWith('assets/')) {
+      return `http://${BASE_URL}/${profileImage}`;
+    }
+    
+    // For other formats (profile_images/, etc.), add /storage/ prefix
+    return `http://${BASE_URL}/storage/${profileImage}`;
   };
 
   const getInitials = (firstName?: string, lastName?: string) => {
@@ -164,10 +179,10 @@ export default function EditPatient() {
         last_name: patient.user?.last_name || "",
         email: patient.user?.email || "",
         date_of_birth: formatDateForInput(patient.date_of_birth),
-        gender: patient.gender,
-        address: patient.address,
-        hospital_id: patient.hospital_id.toString(),
-        doctor_id: patient.doctor_id.toString(),
+        gender: patient.gender || "",
+        address: patient.address || "",
+        hospital_id: patient.hospital_id ? patient.hospital_id.toString() : "",
+        doctor_id: patient.doctor_id ? patient.doctor_id.toString() : "",
       };
       
       console.log("Form data to reset with:", formData);
@@ -189,10 +204,21 @@ export default function EditPatient() {
       );
       console.log("Filtered doctors:", filteredDoctors.map(d => ({ id: d.id, name: d.fullname })));
       setDoctors(filteredDoctors);
+      
+      // Clear doctor selection if current doctor doesn't belong to selected hospital
+      if (selectedDoctorId) {
+        const isDoctorInHospital = filteredDoctors.some(d => d.id.toString() === selectedDoctorId);
+        if (!isDoctorInHospital) {
+          setValue("doctor_id", "");
+        }
+      }
     } else {
       setDoctors([]);
+      if (selectedDoctorId) {
+        setValue("doctor_id", "");
+      }
     }
-  }, [selectedHospitalId, allDoctors]);
+  }, [selectedHospitalId, allDoctors, selectedDoctorId, setValue]);
 
   const fetchHospitals = async () => {
     try {
@@ -278,7 +304,7 @@ export default function EditPatient() {
 
       console.log("Updating patient:", patient.id);
 
-      const response = await axios.post(`http://${BASE_URL}/api/patient/${patient.id}`, formData, {
+      const response = await axios.post(`http://${BASE_URL}/patient/${patient.id}`, formData, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

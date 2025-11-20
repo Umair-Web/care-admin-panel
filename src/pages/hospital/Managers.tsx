@@ -30,6 +30,29 @@ import { authStorage } from "@/utils/authStorage";
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 const token = authStorage.getToken();
 
+// Helper function to construct proper image URL
+const getImageUrl = (profileImage: string | null): string => {
+  if (!profileImage) return "";
+  
+  // If already starts with http or https, return as is
+  if (profileImage.startsWith('http')) {
+    return profileImage;
+  }
+  
+  // If starts with /storage, prepend base URL only
+  if (profileImage.startsWith('/storage')) {
+    return `http://${BASE_URL}${profileImage}`;
+  }
+  
+  // If starts with assets/, it's in public directory (no /storage/ prefix needed)
+  if (profileImage.startsWith('assets/')) {
+    return `http://${BASE_URL}/${profileImage}`;
+  }
+  
+  // For other formats (profile_images/, etc.), add /storage/ prefix
+  return `http://${BASE_URL}/storage/${profileImage}`;
+};
+
 interface User {
   id: number;
   first_name: string;
@@ -89,7 +112,7 @@ const handleDelete = async () => {
 
     try {
       // ✅ FIXED: Use /api/managers instead of /managers
-      await axios.delete(`http://${BASE_URL}/api/managers/${deleteId}`, {
+      await axios.delete(`http://${BASE_URL}/managers/${deleteId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -169,7 +192,7 @@ const handleDelete = async () => {
                       <TableCell>
                         <Avatar>
                           <AvatarImage 
-                            src={manager.user.profile_image ? `http://${BASE_URL}/storage/${manager.user.profile_image}` : undefined} 
+                            src={getImageUrl(manager.user.profile_image)} 
                           />
                           <AvatarFallback>
                             {manager.user.first_name[0]}

@@ -15,6 +15,29 @@ import { authStorage } from "@/utils/authStorage";
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 const token = authStorage.getToken();
 
+// Helper function to construct proper image URL
+const getImageUrl = (profileImage?: string): string => {
+  if (!profileImage) return "";
+  
+  // If already starts with http or https, return as is
+  if (profileImage.startsWith('http')) {
+    return profileImage;
+  }
+  
+  // If starts with /storage, prepend base URL only
+  if (profileImage.startsWith('/storage')) {
+    return `http://${BASE_URL}${profileImage}`;
+  }
+  
+  // If starts with assets/, it's in public directory (no /storage/ prefix needed)
+  if (profileImage.startsWith('assets/')) {
+    return `http://${BASE_URL}/${profileImage}`;
+  }
+  
+  // For other formats (profile_images/, etc.), add /storage/ prefix
+  return `http://${BASE_URL}/storage/${profileImage}`;
+};
+
 const managerSchema = z.object({
   first_name: z.string().min(1, "First name is required"),
   last_name: z.string().min(1, "Last name is required"),
@@ -94,7 +117,7 @@ export default function EditManager() {
 
       // Set existing profile image preview
       if (manager.user.profile_image) {
-        setPreview(`http://${BASE_URL}/storage/${manager.user.profile_image}`);
+        setPreview(getImageUrl(manager.user.profile_image));
       }
       setInitialLoading(false);
     }
@@ -172,7 +195,7 @@ const onSubmit = async (data: ManagerFormData) => {
     console.log("Updating manager with FormData");
 
     // ✅ CHANGE: Use POST instead of PUT with FormData
-    const response = await axios.post(`http://${BASE_URL}/api/managers/${id}`, formData, {
+    const response = await axios.post(`http://${BASE_URL}/managers/${id}`, formData, {
       headers: {
         Authorization: `Bearer ${token}`,
         // Don't set Content-Type for FormData

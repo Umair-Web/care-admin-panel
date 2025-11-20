@@ -106,7 +106,7 @@ export default function Patient() {
     
     try {
       setDeleting(true);
-      const response = await axios.delete(`http://${BASE_URL}/api/patient/${deleteId}`, {
+      const response = await axios.delete(`http://${BASE_URL}/patient/${deleteId}`, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
@@ -145,13 +145,26 @@ export default function Patient() {
     return "P";
   };
 
-  const getImageUrl = (imagePath?: string) => {
-    if (!imagePath) return "";
-    if (imagePath.startsWith('http')) {
-      return imagePath;
+  const getImageUrl = (profileImage?: string): string => {
+    if (!profileImage) return "";
+    
+    // If already starts with http or https, return as is
+    if (profileImage.startsWith('http')) {
+      return profileImage;
     }
-    // Laravel stores with /storage/ prefix, so use it directly
-    return `http://${BASE_URL}${imagePath}`;
+    
+    // If starts with /storage, prepend base URL only
+    if (profileImage.startsWith('/storage')) {
+      return `http://${BASE_URL}${profileImage}`;
+    }
+    
+    // If starts with assets/, it's in public directory (no /storage/ prefix needed)
+    if (profileImage.startsWith('assets/')) {
+      return `http://${BASE_URL}/${profileImage}`;
+    }
+    
+    // For other formats (profile_images/, etc.), add /storage/ prefix
+    return `http://${BASE_URL}/storage/${profileImage}`;
   };
 
   return (

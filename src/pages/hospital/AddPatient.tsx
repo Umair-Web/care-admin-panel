@@ -173,7 +173,7 @@ export default function AddPatient() {
       console.log("Submitting patient data:", Object.fromEntries(formData));
 
       const response = await axios.post(
-        `http://${BASE_URL}/api/patient`,
+        `http://${BASE_URL}/patient`,
         formData,
         {
           headers: {
