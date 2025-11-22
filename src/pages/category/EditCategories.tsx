@@ -172,7 +172,7 @@ const onSubmit = async (data: CategoryFormData) => {
                   <Label>Current Image</Label>
                   <div className="mt-2">
                     <img
-                      src={`http://127.0.0.1:8000/storage/${currentImagePreview}`}
+                      src={`http://${BASE_URL}/storage/${currentImagePreview}`}
                       alt="Category"
                       className="h-32 w-32 object-cover rounded-md"
                     />
