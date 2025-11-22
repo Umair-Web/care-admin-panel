@@ -91,6 +91,13 @@ interface User {
   role_name?: string;
   role?: { name: string };
   profile_image?: string;
+  subscription?: {
+    id: number;
+    name: string;
+    description?: string;
+    created_at?: string;
+    updated_at?: string;
+  };
 }
 
 const EditUser = () => {
@@ -103,6 +110,11 @@ const EditUser = () => {
   const [imagePreview, setImagePreview] = useState("");
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [deletePassword, setDeletePassword] = useState("");
+  const [subscriptions, setSubscriptions] = useState<Array<{ id: number; name: string }>>([]);
+  const [selectedSubscription, setSelectedSubscription] = useState<string>("");
+
+
+  console.log("EditUser component initialized with userData:", userData);
 
   const profileForm = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
@@ -126,24 +138,61 @@ const EditUser = () => {
   const watchedFirstName = profileForm.watch("first_name", "");
   const watchedLastName = profileForm.watch("last_name", "");
 
+
   useEffect(() => {
     fetchRoles();
-    
     if (userData) {
       populateUserData();
+      // If user role is 'User', fetch all subscriptions
+      if (userData.role_name === "User" || userData.role?.name === "User") {
+        fetchSubscriptions();
+      }
     } else if (id) {
       // Fallback: fetch user data if not passed via navigation state
       fetchUserData();
     }
   }, [userData, id]);
 
+  // Ensure selected subscription is set after subscriptions and userData are available
+  useEffect(() => {
+    if ((userData?.role_name === "User" || userData?.role?.name === "User") && subscriptions.length > 0) {
+      if (userData?.subscription) {
+        setSelectedSubscription(userData.subscription.id.toString());
+      } else {
+        setSelectedSubscription("");
+      }
+    }
+  }, [subscriptions, userData]);
+  // Fetch all subscriptions
+  const fetchSubscriptions = async () => {
+    try {
+      const response = await axios.get(`http://${BASE_URL}/subscriptions`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const subs = response.data.subscriptions || response.data;
+      setSubscriptions(Array.isArray(subs) ? subs : []);
+    } catch (error) {
+      console.error("Error fetching subscriptions:", error);
+      toast.error("Failed to load subscriptions");
+    }
+  };
+
+  // Ensure role dropdown is set after roles are loaded
+  useEffect(() => {
+    if (roles.length > 0 && userData) {
+      populateUserData();
+    }
+  }, [roles]);
+
   const fetchRoles = async () => {
     try {
       const staticRoles = [
         { id: 1, name: "Super Admin" },
-        { id: 2, name: "Administrator" },
-        { id: 3, name: "User" },
-        { id: 4, name: "Hospital Manager" },
+        { id: 2, name: "User" },
+        { id: 3, name: "Administrator" },
+        { id: 4, name: "Manager" },
         { id: 5, name: "Patient" },
       ];
       setRoles(staticRoles);
@@ -166,6 +215,8 @@ const EditUser = () => {
 
       const user = response.data.data || response.data;
       setUserData(user);
+
+      console.log("Fetched user data:", user);
     } catch (error) {
       console.error("Error fetching user data:", error);
       toast.error("Failed to load user data");
@@ -177,12 +228,29 @@ const EditUser = () => {
   const populateUserData = () => {
     if (!userData) return;
 
+    // Find the correct role_id from roles array using role_name or role.name
+    let selectedRoleId = "";
+    if (roles.length > 0) {
+      const roleName = userData.role_name || userData.role?.name || "";
+      const foundRole = roles.find(r => r.name.toLowerCase() === roleName.toLowerCase());
+      if (foundRole) {
+        selectedRoleId = foundRole.id.toString();
+      }
+    }
+
     profileForm.reset({
       first_name: userData.first_name || "",
       last_name: userData.last_name || "",
       email: userData.email || "",
-      role_id: (userData.role_id || "").toString(),
+      role_id: selectedRoleId,
     });
+
+    // Set current subscription if exists
+    if (userData.subscription) {
+      setSelectedSubscription(userData.subscription.id.toString());
+    } else {
+      setSelectedSubscription("");
+    }
 
     if (userData.profile_image) {
       setImagePreview(getImageUrl(userData.profile_image));
@@ -210,6 +278,10 @@ const EditUser = () => {
       formData.append("last_name", data.last_name);
       formData.append("email", data.email);
       formData.append("role_id", data.role_id);
+      formData.append("subscription_id", selectedSubscription || "");
+
+      console.log("Updating profile with data:", data);
+      console.log("Selected subscription ID:", selectedSubscription);
       
       if (selectedImage) {
         formData.append("image", selectedImage);
@@ -253,6 +325,11 @@ const EditUser = () => {
       formData.append("current_password", data.current_password);
       formData.append("password", data.password);
       formData.append("cpassword", data.cpassword);
+      // Add role_id for password update
+      formData.append("role_id", profileForm.getValues("role_id"));
+      formData.append("email", profileForm.getValues("email"));
+      formData.append("last_name", profileForm.getValues("last_name"));
+      formData.append("first_name", profileForm.getValues("first_name"));
 
       const response = await axios.post(`http://${BASE_URL}/user/update/${id}`, formData, {
         headers: {
@@ -433,6 +510,28 @@ const EditUser = () => {
                   </p>
                 )}
               </div>
+
+              {/* Subscription dropdown if user role is 'User' */}
+              {(userData?.role_name === "User" || userData?.role?.name === "User") && (
+                <div className="space-y-2">
+                  <Label htmlFor="subscription_id">Subscription</Label>
+                  <Select
+                    value={selectedSubscription}
+                    onValueChange={setSelectedSubscription}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select subscription" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {subscriptions.map((sub) => (
+                        <SelectItem key={sub.id} value={sub.id.toString()}>
+                          {sub.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
             </div>
 
             <div className="flex gap-4">

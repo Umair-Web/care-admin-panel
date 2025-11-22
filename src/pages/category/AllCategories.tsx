@@ -183,7 +183,7 @@ export default function AllCategories() {
                       </TableCell>
                       <TableCell>
                         <img
-                          src={`http://127.0.0.1:8000/storage/${Categories.image}`}
+                          src={`http://${BASE_URL}/storage/${Categories.image}`}
                           alt={Categories.name}
                           className="h-8 w-8 rounded-md"
                         />

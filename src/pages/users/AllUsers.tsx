@@ -149,7 +149,7 @@ const AllUsers = () => {
         return "default";
       case "Administrator":
         return "secondary";
-      case "Hospital Manager":
+      case "Manager":
         return "outline";
       default:
         return "outline";

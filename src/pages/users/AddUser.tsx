@@ -74,9 +74,9 @@ const AddUser = () => {
       // Since there's no roles API endpoint, we'll use static roles based on your Laravel controller
       const staticRoles = [
         { id: 1, name: "Super Admin" },
-        { id: 2, name: "Administrator" },
-        { id: 3, name: "User" },
-        { id: 4, name: "Hospital Manager" },
+        { id: 2, name: "User" },
+        { id: 3, name: "Administrator" },
+        { id: 4, name: "Manager" },
         { id: 5, name: "Patient" },
       ];
       setRoles(staticRoles);
