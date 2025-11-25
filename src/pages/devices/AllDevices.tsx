@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Table,
@@ -31,33 +32,34 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
+import { authStorage } from "@/utils/authStorage";
 
-const mockDevices = [
-  {
-    id: 1,
-    title: "Cardiology Monitor",
-    ip: "192.168.1.101",
-    mac: "00:1A:2B:3C:4D:5E",
-    username: "device01",
-    status: "connected",
-  },
-  {
-    id: 2,
-    title: "Surgery VR Unit",
-    ip: "192.168.1.102",
-    mac: "00:1A:2B:3C:4D:5F",
-    username: "vrunit02",
-    status: "disconnected",
-  },
-];
+const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 export default function AllDevices() {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [infoDevice, setInfoDevice] = useState<typeof mockDevices[0] | null>(null);
+  const [devices, setDevices] = useState([]);
 
-  const filteredDevices = mockDevices.filter((d) =>
+  useEffect(() => {
+    const token = authStorage.getToken();
+    axios.get(`http://${BASE_URL}/devices`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+    .then((response) => {
+      console.log("Fetched devices:", response.data);
+      setDevices(response.data.data || []);
+    })
+    .catch((error) => {
+      console.error("Error fetching devices:", error);
+    });
+  }, []);
+
+  const filteredDevices = devices.filter((d) =>
     d.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
