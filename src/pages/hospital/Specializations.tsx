@@ -55,7 +55,7 @@ export default function Specializations() {
       setLoading(true);
       console.log("Fetching specializations...");
       
-      const response = await axios.get(`http://${BASE_URL}/specializations`, {
+      const response = await axios.get(`https://${BASE_URL}/specializations`, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
@@ -88,7 +88,7 @@ export default function Specializations() {
       setDeletingId(deleteId);
       console.log(`Deleting specialization with ID: ${deleteId}`);
       
-      const response = await axios.delete(`http://${BASE_URL}/specialization/${deleteId}`, {
+      const response = await axios.delete(`https://${BASE_URL}/specialization/${deleteId}`, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,

@@ -61,7 +61,7 @@ export default function AddVideo() {
 
   const fetchCategories = () => {
     axios
-      .get(`http://${BASE_URL}/categories`, {
+      .get(`https://${BASE_URL}/categories`, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
@@ -113,7 +113,7 @@ export default function AddVideo() {
 
     console.log("Sending FormData with multipart/form-data");
 
-    await axios.post(`http://${BASE_URL}/video`, formData, {
+    await axios.post(`https://${BASE_URL}/video`, formData, {
       headers: {
         Authorization: `Bearer ${token}`,
         // IMPORTANT: Do NOT set Content-Type header

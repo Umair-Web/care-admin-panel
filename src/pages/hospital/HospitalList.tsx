@@ -68,7 +68,7 @@ export default function HospitalList() {
     try {
       setLoading(true);
       
-      const response = await axios.get(`http://${BASE_URL}/hospitals`, {
+      const response = await axios.get(`https://${BASE_URL}/hospitals`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -94,7 +94,7 @@ export default function HospitalList() {
     if (!deleteId) return;
     
     try {
-      const response = await axios.delete(`http://${BASE_URL}/hospital/${deleteId}`, {
+      const response = await axios.delete(`https://${BASE_URL}/hospital/${deleteId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

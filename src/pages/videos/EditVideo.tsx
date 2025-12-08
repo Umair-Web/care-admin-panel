@@ -93,10 +93,10 @@ export default function EditVideo() {
 
       // Set existing thumbnails/video previews
       if (video.image) {
-        setThumbnailPreview(`http://${BASE_URL}/storage/${video.image}`);
+        setThumbnailPreview(`https://${BASE_URL}/storage/${video.image}`);
       }
       if (video.video) {
-        setVideoPreview(`http://${BASE_URL}/storage/${video.video}`);
+        setVideoPreview(`https://${BASE_URL}/storage/${video.video}`);
       }
       setInitialLoading(false);
     }
@@ -105,7 +105,7 @@ export default function EditVideo() {
   const fetchVideoData = async () => {
     try {
       setInitialLoading(true);
-      const response = await axios.get(`http://${BASE_URL}/videos`, {
+      const response = await axios.get(`https://${BASE_URL}/videos`, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
@@ -130,7 +130,7 @@ export default function EditVideo() {
 
   const fetchCategories = async () => {
     try {
-      const response = await axios.get(`http://${BASE_URL}/categories`, {
+      const response = await axios.get(`https://${BASE_URL}/categories`, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
@@ -192,7 +192,7 @@ export default function EditVideo() {
 
       console.log("Updating video with FormData");
 
-      await axios.post(`http://${BASE_URL}/video/${id}`, formData, {
+      await axios.post(`https://${BASE_URL}/video/${id}`, formData, {
         headers: {
           Authorization: `Bearer ${token}`,
           // Let the browser set Content-Type with boundary
@@ -324,7 +324,7 @@ export default function EditVideo() {
                 <Label>Current Video</Label>
                 <div className="border rounded-md p-4">
                   <video
-                    src={`http://${BASE_URL}/storage/${video.video}`}
+                    src={`https://${BASE_URL}/storage/${video.video}`}
                     controls
                     className="h-40 w-auto rounded-md"
                     preload="metadata"

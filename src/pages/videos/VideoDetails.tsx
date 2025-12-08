@@ -53,7 +53,7 @@ export default function VideoDetails() {
   const fetchVideoData = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`http://${BASE_URL}/videos`, {
+      const response = await axios.get(`https://${BASE_URL}/videos`, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
@@ -81,7 +81,7 @@ export default function VideoDetails() {
 
     try {
       setDeleteLoading(true);
-      await axios.delete(`http://${BASE_URL}/video/${video.id}`, {
+      await axios.delete(`https://${BASE_URL}/video/${video.id}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -166,11 +166,11 @@ export default function VideoDetails() {
             <CardContent>
               {video.video ? (
                 <video
-                  src={`http://${BASE_URL}/storage/${video.video}`}
+                  src={`https://${BASE_URL}/storage/${video.video}`}
                   controls
                   className="w-full h-auto rounded-md"
                   preload="metadata"
-                  poster={video.image ? `http://${BASE_URL}/storage/${video.image}` : undefined}
+                  poster={video.image ? `https://${BASE_URL}/storage/${video.image}` : undefined}
                 >
                   Your browser does not support the video tag.
                 </video>
@@ -234,7 +234,7 @@ export default function VideoDetails() {
               </CardHeader>
               <CardContent>
                 <img
-                  src={`http://${BASE_URL}/storage/${video.image}`}
+                  src={`https://${BASE_URL}/storage/${video.image}`}
                   alt={video.title}
                   className="w-full h-auto rounded-md"
                 />

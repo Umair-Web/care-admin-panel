@@ -117,7 +117,7 @@ const SignUp = () => {
     console.log("Form Data:", formData);
     console.log("Firstname:", formData.firstName);
 
-    axios.post(`http://${BASE_URL}/api/signup`, {
+    axios.post(`https://${BASE_URL}/api/signup`, {
       first_name: formData.firstName,
       last_name: formData.lastName,
       email: formData.email,

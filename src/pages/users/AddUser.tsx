@@ -114,7 +114,7 @@ const AddUser = () => {
         formData.append("image", selectedImage);
       }
 
-      const response = await axios.post(`http://${BASE_URL}/user`, formData, {
+      const response = await axios.post(`https://${BASE_URL}/user`, formData, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

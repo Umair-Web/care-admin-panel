@@ -73,7 +73,7 @@ export default function AddDoctor() {
   const fetchSpecializations = async () => {
     try {
       setSpecializationsLoading(true);
-      const response = await axios.get(`http://${BASE_URL}/specializations`, {
+      const response = await axios.get(`https://${BASE_URL}/specializations`, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
@@ -95,7 +95,7 @@ export default function AddDoctor() {
   const fetchHospitals = async () => {
     try {
       setHospitalsLoading(true);
-      const response = await axios.get(`http://${BASE_URL}/hospitals`, {
+      const response = await axios.get(`https://${BASE_URL}/hospitals`, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
@@ -157,7 +157,7 @@ export default function AddDoctor() {
         console.log(`${key}:`, value);
       }
 
-      const response = await axios.post(`http://${BASE_URL}/doctor`, formData, {
+      const response = await axios.post(`https://${BASE_URL}/doctor`, formData, {
         headers: {
           Authorization: `Bearer ${token}`,
           // Don't set Content-Type - let browser set it with boundary for multipart/form-data

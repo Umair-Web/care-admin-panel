@@ -99,7 +99,7 @@ export default function AddPatient() {
   const fetchHospitals = async () => {
     try {
       setLoadingHospitals(true);
-      const response = await axios.get(`http://${BASE_URL}/hospitals`, {
+      const response = await axios.get(`https://${BASE_URL}/hospitals`, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
@@ -120,7 +120,7 @@ export default function AddPatient() {
   const fetchDoctors = async () => {
     try {
       setLoadingDoctors(true);
-      const response = await axios.get(`http://${BASE_URL}/doctors`, {
+      const response = await axios.get(`https://${BASE_URL}/doctors`, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
@@ -173,7 +173,7 @@ export default function AddPatient() {
       console.log("Submitting patient data:", Object.fromEntries(formData));
 
       const response = await axios.post(
-        `http://${BASE_URL}/patient`,
+        `https://${BASE_URL}/patient`,
         formData,
         {
           headers: {

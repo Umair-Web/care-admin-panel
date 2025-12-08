@@ -45,7 +45,7 @@ export default function AllDevices() {
 
   useEffect(() => {
     const token = authStorage.getToken();
-    axios.get(`http://${BASE_URL}/devices`, {
+    axios.get(`https://${BASE_URL}/devices`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },

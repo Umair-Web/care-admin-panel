@@ -39,7 +39,7 @@ export default function AddSpecialization() {
       console.log("Creating specialization:", data);
 
       const response = await axios.post(
-        `http://${BASE_URL}/specialization`,
+        `https://${BASE_URL}/specialization`,
         { name: data.name },
         {
           headers: {

@@ -70,7 +70,7 @@ export default function AllVideos() {
   const fetchVideos = () => {
     setLoading(true);
     axios
-      .get(`http://${BASE_URL}/videos`, {
+      .get(`https://${BASE_URL}/videos`, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
@@ -92,7 +92,7 @@ export default function AllVideos() {
 
   const handleDelete = async () => {
     try {
-      await axios.delete(`http://${BASE_URL}/video/${deleteId}`, {
+      await axios.delete(`https://${BASE_URL}/video/${deleteId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -168,7 +168,7 @@ export default function AllVideos() {
                       <TableCell>
                         {video.image ? (
                           <img
-                            src={`http://${BASE_URL}/storage/${video.image}`}
+                            src={`https://${BASE_URL}/storage/${video.image}`}
                             alt={video.title}
                             className="h-10 w-16 object-cover rounded"
                           />
@@ -180,7 +180,7 @@ export default function AllVideos() {
                         {video.video ? (
                           <div className="relative group">
                             <video
-                              src={`http://${BASE_URL}/storage/${video.video}`}
+                              src={`https://${BASE_URL}/storage/${video.video}`}
                               controls
                               className="h-20 w-32 rounded cursor-pointer"
                               preload="metadata"
@@ -268,7 +268,7 @@ export default function AllVideos() {
           <div className="flex-1 flex items-center justify-center">
             {fullscreenVideo?.video && (
               <video
-                src={`http://${BASE_URL}/storage/${fullscreenVideo.video}`}
+                src={`https://${BASE_URL}/storage/${fullscreenVideo.video}`}
                 controls
                 autoPlay
                 className="w-full h-full max-h-[calc(90vh-80px)] object-contain"

@@ -71,7 +71,7 @@ export default function Doctors() {
   const fetchDoctors = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`http://${BASE_URL}/doctors`, {
+      const response = await axios.get(`https://${BASE_URL}/doctors`, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
@@ -109,7 +109,7 @@ export default function Doctors() {
     try {
       setDeleting(true);
       const response = await axios.delete(
-        `http://${BASE_URL}/doctor/${deleteId}`,
+        `https://${BASE_URL}/doctor/${deleteId}`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -153,10 +153,10 @@ export default function Doctors() {
   const getImageUrl = (imagePath?: string) => {
     if (!imagePath) return "";
     // Assuming the images are served from storage folder
-    if (imagePath.startsWith("http")) {
+    if (imagePath.startsWith("https")) {
       return imagePath;
     }
-    return `http://${BASE_URL}/storage/${imagePath}`;
+    return `https://${BASE_URL}/storage/${imagePath}`;
   };
 
   return (
@@ -224,7 +224,7 @@ export default function Doctors() {
                       <TableCell>
                         <Avatar>
                           <AvatarImage
-                            src={getImageUrl(`http://${BASE_URL}${doctor.profile_image}`)}
+                            src={getImageUrl(`https://${BASE_URL}${doctor.profile_image}`)}
                           />
                           <AvatarFallback>
                             {getInitials(doctor.fullname)}

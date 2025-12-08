@@ -39,7 +39,7 @@ export default function AddDepartment() {
       console.log("Creating department:", data);
 
       const response = await axios.post(
-        `http://${BASE_URL}/department`,
+        `https://${BASE_URL}/department`,
         { name: data.name },
         {
           headers: {

@@ -63,7 +63,7 @@ export default function EditSpecialization() {
   const fetchSpecializationData = async () => {
     try {
       setInitialLoading(true);
-      const response = await axios.get(`http://${BASE_URL}/specializations`, {
+      const response = await axios.get(`https://${BASE_URL}/specializations`, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
@@ -97,7 +97,7 @@ export default function EditSpecialization() {
       console.log("Updating specialization:", data);
 
       const response = await axios.put(
-        `http://${BASE_URL}/specialization/${id}`,
+        `https://${BASE_URL}/specialization/${id}`,
         { name: data.name },
         {
           headers: {

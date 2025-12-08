@@ -39,7 +39,7 @@ export default function AddSubscription() {
   const onSubmit = (data: SubscriptionFormData) => {
     console.log(data);
     console.log("Token:", token);
-    axios.post(`http://${BASE_URL}/subscription`, {
+    axios.post(`https://${BASE_URL}/subscription`, {
 
       name: data.name,
       price: data.price,

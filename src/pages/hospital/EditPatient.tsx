@@ -135,23 +135,23 @@ export default function EditPatient() {
   const getImageUrl = (profileImage?: string): string => {
     if (!profileImage) return "";
     
-    // If already starts with http or https, return as is
-    if (profileImage.startsWith('http')) {
+    // If already starts with https or httpss, return as is
+    if (profileImage.startsWith('https')) {
       return profileImage;
     }
     
     // If starts with /storage, prepend base URL only
     if (profileImage.startsWith('/storage')) {
-      return `http://${BASE_URL}${profileImage}`;
+      return `https://${BASE_URL}${profileImage}`;
     }
     
     // If starts with assets/, it's in public directory (no /storage/ prefix needed)
     if (profileImage.startsWith('assets/')) {
-      return `http://${BASE_URL}/${profileImage}`;
+      return `https://${BASE_URL}/${profileImage}`;
     }
     
     // For other formats (profile_images/, etc.), add /storage/ prefix
-    return `http://${BASE_URL}/storage/${profileImage}`;
+    return `https://${BASE_URL}/storage/${profileImage}`;
   };
 
   const getInitials = (firstName?: string, lastName?: string) => {
@@ -223,7 +223,7 @@ export default function EditPatient() {
   const fetchHospitals = async () => {
     try {
       setLoadingHospitals(true);
-      const response = await axios.get(`http://${BASE_URL}/hospitals`, {
+      const response = await axios.get(`https://${BASE_URL}/hospitals`, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
@@ -244,7 +244,7 @@ export default function EditPatient() {
   const fetchDoctors = async () => {
     try {
       setLoadingDoctors(true);
-      const response = await axios.get(`http://${BASE_URL}/doctors`, {
+      const response = await axios.get(`https://${BASE_URL}/doctors`, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
@@ -304,7 +304,7 @@ export default function EditPatient() {
 
       console.log("Updating patient:", patient.id);
 
-      const response = await axios.post(`http://${BASE_URL}/patient/${patient.id}`, formData, {
+      const response = await axios.post(`https://${BASE_URL}/patient/${patient.id}`, formData, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

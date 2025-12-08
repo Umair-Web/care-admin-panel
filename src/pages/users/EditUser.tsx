@@ -38,23 +38,23 @@ const token = authStorage.getToken();
 const getImageUrl = (profileImage: string | null): string => {
   if (!profileImage) return "";
   
-  // If already starts with http or https, return as is
-  if (profileImage.startsWith('http')) {
+  // If already starts with https or httpss, return as is
+  if (profileImage.startsWith('https')) {
     return profileImage;
   }
   
   // If starts with /storage, prepend base URL only
   if (profileImage.startsWith('/storage')) {
-    return `http://${BASE_URL}${profileImage}`;
+    return `https://${BASE_URL}${profileImage}`;
   }
   
   // If starts with assets/, it's in public directory (no /storage/ prefix needed)
   if (profileImage.startsWith('assets/')) {
-    return `http://${BASE_URL}/${profileImage}`;
+    return `https://${BASE_URL}/${profileImage}`;
   }
   
   // For other formats (profile_images/, etc.), add /storage/ prefix
-  return `http://${BASE_URL}/storage/${profileImage}`;
+  return `https://${BASE_URL}/storage/${profileImage}`;
 };
 
 const profileSchema = z.object({
@@ -166,7 +166,7 @@ const EditUser = () => {
   // Fetch all subscriptions
   const fetchSubscriptions = async () => {
     try {
-      const response = await axios.get(`http://${BASE_URL}/subscriptions`, {
+      const response = await axios.get(`https://${BASE_URL}/subscriptions`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -207,7 +207,7 @@ const EditUser = () => {
     
     try {
       setLoading(true);
-      const response = await axios.get(`http://${BASE_URL}/users/${id}`, {
+      const response = await axios.get(`https://${BASE_URL}/users/${id}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -290,7 +290,7 @@ const EditUser = () => {
       console.log("Updating profile with data:", data);
 
       // Use dedicated POST route for FormData handling
-      const response = await axios.post(`http://${BASE_URL}/user/update/${id}`, formData, {
+      const response = await axios.post(`https://${BASE_URL}/user/update/${id}`, formData, {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'multipart/form-data',
@@ -331,7 +331,7 @@ const EditUser = () => {
       formData.append("last_name", profileForm.getValues("last_name"));
       formData.append("first_name", profileForm.getValues("first_name"));
 
-      const response = await axios.post(`http://${BASE_URL}/user/update/${id}`, formData, {
+      const response = await axios.post(`https://${BASE_URL}/user/update/${id}`, formData, {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'multipart/form-data',
@@ -370,7 +370,7 @@ const EditUser = () => {
       const formData = new FormData();
       formData.append('id', id as string);
 
-      const response = await axios.post(`http://${BASE_URL}/user/delete`, formData, {
+      const response = await axios.post(`https://${BASE_URL}/user/delete`, formData, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

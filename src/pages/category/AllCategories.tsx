@@ -65,7 +65,7 @@ export default function AllCategories() {
   const fetchCategories = () => {
     setLoading(true);
     axios
-      .get(`http://${BASE_URL}/categories`, {
+      .get(`https://${BASE_URL}/categories`, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
@@ -90,7 +90,7 @@ export default function AllCategories() {
     console.log("Deleting category with ID:", deleteId);  
     try {
       const response = await axios.delete(
-        `http://${BASE_URL}/category/${deleteId}`,
+        `https://${BASE_URL}/category/${deleteId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -183,7 +183,7 @@ export default function AllCategories() {
                       </TableCell>
                       <TableCell>
                         <img
-                          src={`http://${BASE_URL}/storage/${Categories.image}`}
+                          src={`https://${BASE_URL}/storage/${Categories.image}`}
                           alt={Categories.name}
                           className="h-8 w-8 rounded-md"
                         />

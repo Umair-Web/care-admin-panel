@@ -91,7 +91,7 @@ export default function EditSubscription() {
 
     try {
 
-      await axios.put(`http://${BASE_URL}/subscription/${subscription.id}`, {
+      await axios.put(`https://${BASE_URL}/subscription/${subscription.id}`, {
 
         name: data.name,
         price: data.price,

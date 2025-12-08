@@ -100,7 +100,7 @@ export default function AddManager() {
       console.log("Sending FormData to create manager");
 
       const response = await axios.post(
-        `http://${BASE_URL}/managers`,
+        `https://${BASE_URL}/managers`,
         formData,
         {
           headers: {

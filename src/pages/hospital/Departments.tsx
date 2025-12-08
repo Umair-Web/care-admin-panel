@@ -55,7 +55,7 @@ export default function Departments() {
       setLoading(true);
       console.log("Fetching departments...");
       
-      const response = await axios.get(`http://${BASE_URL}/departments`, {
+      const response = await axios.get(`https://${BASE_URL}/departments`, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
@@ -88,7 +88,7 @@ export default function Departments() {
       setDeletingId(deleteId);
       console.log(`Deleting department with ID: ${deleteId}`);
       
-      const response = await axios.delete(`http://${BASE_URL}/department/${deleteId}`, {
+      const response = await axios.delete(`https://${BASE_URL}/department/${deleteId}`, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,

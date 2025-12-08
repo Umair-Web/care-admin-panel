@@ -123,7 +123,7 @@ export default function EditHospital() {
     try {
       setManagersLoading(true);
       const token = authStorage.getToken();
-      const response = await axios.get(`http://${BASE_URL}/managers`, {
+      const response = await axios.get(`https://${BASE_URL}/managers`, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
@@ -148,7 +148,7 @@ export default function EditHospital() {
       const token = authStorage.getToken();
       console.log("Fetching departments...");
       
-      const response = await axios.get(`http://${BASE_URL}/departments`, {
+      const response = await axios.get(`https://${BASE_URL}/departments`, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
@@ -175,7 +175,7 @@ export default function EditHospital() {
       setLoading(true);
       const token = authStorage.getToken();
       
-      const response = await axios.put(`http://${BASE_URL}/hospital/${id}`, data, {
+      const response = await axios.put(`https://${BASE_URL}/hospital/${id}`, data, {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',

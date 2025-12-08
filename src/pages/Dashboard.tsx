@@ -51,7 +51,7 @@ const Dashboard = () => {
   const fetchStatistics = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`http://${BASE_URL}/dashboard/statistics`, {
+      const response = await axios.get(`https://${BASE_URL}/dashboard/statistics`, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,

@@ -63,7 +63,7 @@ export default function AllSubscriptions() {
   }, []);
 
   const fetchSubscriptions = () => {
-    axios.get(`http://${BASE_URL}/subscriptions`, {
+    axios.get(`https://${BASE_URL}/subscriptions`, {
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,
@@ -100,7 +100,7 @@ export default function AllSubscriptions() {
   const handleDelete = async () => {
     try {
       const response = await axios.delete(
-        `http://${BASE_URL}/subscription/${deleteId}`,
+        `https://${BASE_URL}/subscription/${deleteId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

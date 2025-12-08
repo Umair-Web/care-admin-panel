@@ -54,7 +54,7 @@ const SignIn = () => {
     setLoading(true);
 
 
-    axios.post(`http://${BASE_URL}/login`, {
+    axios.post(`https://${BASE_URL}/login`, {
       email: formData.email,
       password: formData.password,
     }).then((response) => {

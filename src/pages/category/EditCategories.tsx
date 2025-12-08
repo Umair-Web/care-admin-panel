@@ -70,7 +70,7 @@ export default function EditCategories() {
   useEffect(() => {
     // Fetch available subscriptions
     axios
-      .get(`http://${BASE_URL}/subscriptions`, {
+      .get(`https://${BASE_URL}/subscriptions`, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
@@ -129,7 +129,7 @@ const onSubmit = async (data: CategoryFormData) => {
       console.log(`${pair[0]}: ${pair[1]}`);
     }
 
-    await axios.post(`http://${BASE_URL}/category/${category.id}`, formData, {
+    await axios.post(`https://${BASE_URL}/category/${category.id}`, formData, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -172,7 +172,7 @@ const onSubmit = async (data: CategoryFormData) => {
                   <Label>Current Image</Label>
                   <div className="mt-2">
                     <img
-                      src={`http://${BASE_URL}/storage/${currentImagePreview}`}
+                      src={`https://${BASE_URL}/storage/${currentImagePreview}`}
                       alt="Category"
                       className="h-32 w-32 object-cover rounded-md"
                     />

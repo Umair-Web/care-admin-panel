@@ -143,7 +143,7 @@ export default function EditDoctor() {
   const fetchSpecializations = async () => {
     try {
       setSpecializationsLoading(true);
-      const response = await axios.get(`http://${BASE_URL}/specializations`, {
+      const response = await axios.get(`https://${BASE_URL}/specializations`, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
@@ -165,7 +165,7 @@ export default function EditDoctor() {
   const fetchHospitals = async () => {
     try {
       setHospitalsLoading(true);
-      const response = await axios.get(`http://${BASE_URL}/hospitals`, {
+      const response = await axios.get(`https://${BASE_URL}/hospitals`, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
@@ -197,10 +197,10 @@ export default function EditDoctor() {
 
   const getImageUrl = (imagePath?: string) => {
     if (!imagePath) return "";
-    if (imagePath.startsWith('http')) {
+    if (imagePath.startsWith('https')) {
       return imagePath;
     }
-    return `http://${BASE_URL}${imagePath}`;
+    return `https://${BASE_URL}${imagePath}`;
   };
 
   const getInitials = (name: string) => {
@@ -243,7 +243,7 @@ export default function EditDoctor() {
         console.log(`${key}:`, value);
       }
 
-      const response = await axios.post(`http://${BASE_URL}/doctor/${doctor.id}`, formData, {
+      const response = await axios.post(`https://${BASE_URL}/doctor/${doctor.id}`, formData, {
         headers: {
           Authorization: `Bearer ${token}`,
           // Don't set Content-Type - let browser set it with boundary for multipart/form-data

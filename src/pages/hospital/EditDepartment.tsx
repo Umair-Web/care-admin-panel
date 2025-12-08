@@ -63,7 +63,7 @@ export default function EditDepartment() {
   const fetchDepartmentData = async () => {
     try {
       setInitialLoading(true);
-      const response = await axios.get(`http://${BASE_URL}/departments`, {
+      const response = await axios.get(`https://${BASE_URL}/departments`, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
@@ -97,7 +97,7 @@ export default function EditDepartment() {
       console.log("Updating department:", data);
 
       const response = await axios.put(
-        `http://${BASE_URL}/department/${id}`,
+        `https://${BASE_URL}/department/${id}`,
         { name: data.name },
         {
           headers: {

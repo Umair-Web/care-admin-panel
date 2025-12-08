@@ -66,7 +66,7 @@ export default function AddCategory() {
     formData.append('subscription_id[]', typeId.toString());
   });
 
-    axios.post(`http://${BASE_URL}/category`, formData, {
+    axios.post(`https://${BASE_URL}/category`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
         Authorization: `Bearer ${token}`,
@@ -90,7 +90,7 @@ export default function AddCategory() {
   }, []);
 
   const fetchSubscriptions = () => {
-    axios.get(`http://${BASE_URL}/subscriptions`, {
+    axios.get(`https://${BASE_URL}/subscriptions`, {
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,
