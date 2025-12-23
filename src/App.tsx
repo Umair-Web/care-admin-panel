@@ -34,6 +34,8 @@ import EditVideo from "./pages/videos/EditVideo";
 import VideoDetails from "./pages/videos/VideoDetails";
 import EditPatient from "./pages/hospital/EditPatient";
 import AllDevices from "./pages/devices/AllDevices";
+import AddDevice from "./pages/devices/AddDevice";
+import EditDevice from "./pages/devices/EditDevice";
 import AddCategory from "./pages/category/AddCategory";
 import AllCategories from "./pages/category/AllCategories";
 import EditCategories from "./pages/category/EditCategories";
@@ -308,8 +310,29 @@ const App = () => (
               </ProtectedRoute>
             }
           />
-              
-        
+
+          <Route
+            path="/devices/add"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <AddDevice />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+            
+          />
+          <Route
+            path="/devices/edit/:id"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <EditDevice />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+
           {/* =======All categories======= */}
           <Route
             path="/categories/all"

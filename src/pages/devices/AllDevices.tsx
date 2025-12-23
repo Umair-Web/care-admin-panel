@@ -63,9 +63,33 @@ export default function AllDevices() {
     d.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleDelete = () => {
-    toast.success("Device deleted successfully!");
-    setDeleteId(null);
+  const handleDelete = async () => {
+    if (!deleteId) return;
+    
+    try {
+      const token = authStorage.getToken();
+      const response = await axios.post(
+        `https://${BASE_URL}/devices/destroy/${deleteId}`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (response.data.success) {
+        toast.success("Device deleted successfully!");
+        // Refresh devices list
+        setDevices(devices.filter((d) => d.id !== deleteId));
+      }
+    } catch (error) {
+      console.error("Error deleting device:", error);
+      toast.error("Failed to delete device");
+    } finally {
+      setDeleteId(null);
+    }
   };
 
   return (
@@ -98,7 +122,7 @@ export default function AllDevices() {
                     <TableHead>Title</TableHead>
                     <TableHead>IP Address</TableHead>
                     <TableHead>MAC Address</TableHead>
-                    <TableHead>Username</TableHead>
+                    <TableHead>User ID</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
@@ -108,12 +132,12 @@ export default function AllDevices() {
                     <TableRow key={device.id}>
                       <TableCell>{device.id}</TableCell>
                       <TableCell className="font-medium">{device.title}</TableCell>
-                      <TableCell>{device.ip}</TableCell>
-                      <TableCell>{device.mac}</TableCell>
-                      <TableCell>{device.username}</TableCell>
+                      <TableCell>{device.ip_address || '-'}</TableCell>
+                      <TableCell>{device.mac_address || '-'}</TableCell>
+                      <TableCell>{device.user_id || '-'}</TableCell>
                       <TableCell>
-                        <span className={device.status === "connected" ? "text-green-600" : "text-red-600"}>
-                          {device.status}
+                        <span className={device.status === 1 ? "text-green-600" : "text-red-600"}>
+                          {device.status === 1 ? 'Connected' : 'Disconnected'}
                         </span>
                       </TableCell>
                       <TableCell>
@@ -125,7 +149,13 @@ export default function AllDevices() {
                           >
                             <Eye className="h-4 w-4" />
                           </Button>
-                         
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => navigate(`/devices/edit/${device.id}`, { state: { device } })}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
                           <Button
                             variant="ghost"
                             size="icon"
@@ -145,10 +175,10 @@ export default function AllDevices() {
         <TabsContent value="add">
           <div className="rounded-md border bg-card p-6">
             <p className="text-muted-foreground">
-              Add Device form will be rendered here. Navigate to <code>/Devices/add</code> for the
+              Add Device form will be rendered here. Navigate to <code>/devices/add</code> for the
               full form.
             </p>
-            <Button onClick={() => navigate("/Devices/add")} className="mt-4">
+            <Button onClick={() => navigate("/devices/add")} className="mt-4">
               Go to Add Device Form
             </Button>
           </div>
@@ -184,20 +214,20 @@ export default function AllDevices() {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">IP Address</p>
-                  <p className="font-medium">{infoDevice.ip}</p>
+                  <p className="font-medium">{infoDevice.ip_address || '-'}</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">MAC Address</p>
-                  <p className="font-medium">{infoDevice.mac}</p>
+                  <p className="font-medium">{infoDevice.mac_address || '-'}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Username</p>
-                  <p className="font-medium">{infoDevice.username}</p>
+                  <p className="text-sm text-muted-foreground">User ID</p>
+                  <p className="font-medium">{infoDevice.user_id || '-'}</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Status</p>
-                  <Badge variant={infoDevice.status === "connected" ? "default" : "destructive"}>
-                    {infoDevice.status}
+                  <Badge variant={infoDevice.status === 1 ? "default" : "destructive"}>
+                    {infoDevice.status === 1 ? 'Connected' : 'Disconnected'}
                   </Badge>
                 </div>
               </div>
