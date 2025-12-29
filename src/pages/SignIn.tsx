@@ -53,32 +53,41 @@ const SignIn = () => {
 
     setLoading(true);
 
+    axios
+      .post(
+        `https://${BASE_URL}/login`,
+        {
+          email: formData.email,
+          password: formData.password,
+        },
+        {
+          withCredentials: false, 
+        }
+      )
+      .then((response) => {
+        console.log("Response:", response.data);
 
-    axios.post(`https://${BASE_URL}/login`, {
-      email: formData.email,
-      password: formData.password,
-    }).then((response) => {
+        authStorage.setToken(response.data.data.token);
+        console.log("Stored Token:", authStorage.getToken());
 
-      console.log("Response:", response.data);
+        // Set authentication flag for ProtectedRoute component
+        localStorage.setItem("isAuthenticated", "true");
 
-      authStorage.setToken(response.data.data.token);
-      console.log("Stored Token:", authStorage.getToken());
-      
-      // Set authentication flag for ProtectedRoute component
-      localStorage.setItem("isAuthenticated", "true");
-      
-      toast.success("Signed in successfully!");
-      navigate("/dashboard");
-      
-    }).catch((error) => {
-      console.error("SignIn Error:", error);
-      console.error("SignIn Error Response:", error.response);
-      console.error("SignIn Error Data:", error.response?.data);
+        toast.success("Signed in successfully!");
+        navigate("/dashboard");
+      })
+      .catch((error) => {
+        console.error("SignIn Error:", error);
+        console.error("SignIn Error Response:", error.response);
+        console.error("SignIn Error Data:", error.response?.data);
 
-      toast.error(`Failed to sign in.\n ${error.response?.data?.message || ''}`);
-    }).finally(() => {
-      setLoading(false);
-    });
+        toast.error(
+          `Failed to sign in.\n ${error.response?.data?.message || ""}`
+        );
+      })
+      .finally(() => {
+        setLoading(false);
+      });
 
     // // Simulate API call
     // setTimeout(() => {
@@ -94,12 +103,7 @@ const SignIn = () => {
       <div className="w-full max-w-md">
         <div className="bg-card rounded-lg shadow-lg p-8">
           <div className="flex items-center justify-center mb-8">
-            <img
-              src={logo}
-              alt="Metanoia-VR Logo"
-              width={100}
-              height={100}
-            />
+            <img src={logo} alt="Metanoia-VR Logo" width={100} height={100} />
           </div>
 
           <h1 className="text-2xl font-bold text-center mb-2">Welcome Back</h1>
