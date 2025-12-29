@@ -30,6 +30,7 @@ export function DashboardHeader() {
   const handleLogout = () => {
     toast.success("Logged out successfully!");
     localStorage.removeItem("isAuthenticated");
+    sessionStorage.removeItem('dashboardReloaded');
     navigate("/signin");
   };
 

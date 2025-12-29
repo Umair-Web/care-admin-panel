@@ -36,6 +36,15 @@ const Dashboard = () => {
   const [statistics, setStatistics] = useState<DashboardStatistics | null>(null);
   const [loading, setLoading] = useState(true);
  
+  // One-time reload after login
+  useEffect(() => {
+    const hasReloaded = sessionStorage.getItem('dashboardReloaded');
+    if (!hasReloaded) {
+      sessionStorage.setItem('dashboardReloaded', 'true');
+      window.location.reload();
+    }
+  }, []);
+
   // Debug state changes
   useEffect(() => {
    

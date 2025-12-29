@@ -3,6 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { useEffect } from "react";
 import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
 import Dashboard from "./pages/Dashboard";
@@ -51,7 +52,23 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   return isAuthenticated ? <>{children}</> : <Navigate to="/signin" />;
 };
 
-const App = () => (
+
+
+const App = () => {
+    useEffect(() => {
+    const handleBeforeUnload = () => {
+      sessionStorage.removeItem("dashboardReloaded");
+     
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [])
+  
+  return (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
@@ -209,7 +226,7 @@ const App = () => (
             }
           />
 
-           <Route
+          <Route
             path="/hospital/patients/add"
             element={
               <ProtectedRoute>
@@ -237,7 +254,7 @@ const App = () => (
             element={
               <ProtectedRoute>
                 <DashboardLayout>
-                 <Specializations />
+                  <Specializations />
                 </DashboardLayout>
               </ProtectedRoute>
             }
@@ -264,7 +281,7 @@ const App = () => (
             }
           />
 
- {/* ==================Departments================= */}
+          {/* ==================Departments================= */}
           <Route
             path="/hospital/departments/all"
             element={
@@ -320,7 +337,6 @@ const App = () => (
                 </DashboardLayout>
               </ProtectedRoute>
             }
-            
           />
           <Route
             path="/devices/edit/:id"
@@ -353,7 +369,6 @@ const App = () => (
                 </DashboardLayout>
               </ProtectedRoute>
             }
-            
           />
 
           <Route
@@ -361,7 +376,7 @@ const App = () => (
             element={
               <ProtectedRoute>
                 <DashboardLayout>
-                 <EditCategories />
+                  <EditCategories />
                 </DashboardLayout>
               </ProtectedRoute>
             }
@@ -389,7 +404,7 @@ const App = () => (
               </ProtectedRoute>
             }
           />
-           <Route
+          <Route
             path="/subscriptions/add"
             element={
               <ProtectedRoute>
@@ -445,6 +460,6 @@ const App = () => (
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
-);
+);};
 
 export default App;
