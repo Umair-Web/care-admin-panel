@@ -55,7 +55,7 @@ const SignIn = () => {
 
     axios
       .post(
-        `https://${BASE_URL}/login`,
+        `https://${BASE_URL}/api/adminlogin`,
         {
           email: formData.email,
           password: formData.password,
